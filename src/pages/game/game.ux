@@ -1,0 +1,1327 @@
+<!-- 魔女的夜宴 × VN 引擎 v1.1
+     UI 基线 2.0（官方穿戴设计风格：深灰药丸卡片 + 蓝色强调色）
+     引擎基线 VN-1.1（立绘三槽位/BGM/特效/多槽存档/变量系统/内容包解耦） -->
+<template>
+  <div
+    class="page"
+    @click="handleScreenClick"
+    @swipe="handleSwipe"
+    ontouchstart="pageTouchStart"
+    ontouchmove="pageTouchMove"
+    ontouchend="pageTouchEnd"
+  >
+    <image class="bg-image" src="{{ '/common/bg/' + currentBg + '.jpg' }}"></image>
+
+    <!-- 立绘三槽位 -->
+    <image
+      if="{{ characters.left }}"
+      class="sprite sprite-left {{ characters.left.action }}"
+      src="{{ '/common/ch/' + characters.left.key + '.png' }}"
+    ></image>
+    <image
+      if="{{ characters.center }}"
+      class="sprite sprite-center {{ characters.center.action }}"
+      src="{{ '/common/ch/' + characters.center.key + '.png' }}"
+    ></image>
+    <image
+      if="{{ characters.right }}"
+      class="sprite sprite-right {{ characters.right.action }}"
+      src="{{ '/common/ch/' + characters.right.key + '.png' }}"
+    ></image>
+
+    <!-- EV 事件图 -->
+    <image
+      class="ev-image"
+      if="{{ currentEV }}"
+      src="{{ currentEVSrc }}"
+    ></image>
+
+    <!-- SD 事件图 -->
+    <image
+      class="sd-image"
+      if="{{ currentSD }}"
+      src="{{ '/common/ev/' + currentSD + '.png' }}"
+      style="left: {{ sdLeft }}px; top: {{ sdTop }}px"
+      ontouchstart="sdTouchStart"
+      ontouchmove="sdTouchMove"
+      ontouchend="sdTouchEnd"
+      @click="stopClick"
+    ></image>
+
+    <!-- 特效层 -->
+    <div class="fx-overlay {{ fxClass }}" if="{{ fxActive }}"></div>
+
+    <div class="dialogue-layer" if="{{ !isLoading && !isSkipping && !showOptions && !isUIHidden }}">
+      <div class="speaker-box" if="{{ currentSpeaker }}">
+        <text class="speaker-text">{{ currentSpeaker }}</text>
+        <div class="prev-line-btn" @click="goToPrevLine">
+          <text class="prev-line-text">上一句</text>
+        </div>
+      </div>
+
+      <div class="dialogue-box">
+        <scroll scroll-y="true" class="scroll-view" id="dialogueScroll">
+          <text
+            class="typewriter-text"
+            style="font-size: {{ settings.textSize }}px; line-height: {{ settings.textSize * 1.3 }}px; font-weight: {{ settings.boldText ? 'bold' : 'normal' }};"
+          >
+            {{ displayText }}
+          </text>
+        </scroll>
+      </div>
+
+      <text class="bottom-time">{{ bottomTime }}</text>
+    </div>
+
+    <!-- 选项按钮 -->
+    <div class="options-overlay" if="{{ showOptions && !isUIHidden }}">
+      <div class="options-container">
+        <div
+          for="{{ (index, item) in currentOptions }}"
+          class="option-btn {{ item.enabled === false ? 'option-disabled' : '' }}"
+          @click="handleOptionClick(index)"
+        >
+          <text class="option-text">{{ item.text }}</text>
+        </div>
+      </div>
+    </div>
+
+    <!-- 控制层 -->
+    <div class="control-layer" @click="stopClick">
+      <div class="control-btn" @click="toggleUIVisibility">
+        <text class="control-btn-text">{{ isUIHidden ? "显示" : "隐藏" }}</text>
+      </div>
+      <div
+        class="control-btn"
+        ontouchstart="ffTouchStart"
+        ontouchmove="ffTouchMove"
+        ontouchend="ffTouchEnd"
+        if="{{ !isUIHidden }}"
+      >
+        <text class="control-btn-text">快进</text>
+      </div>
+    </div>
+
+    <!-- 菜单 -->
+    <div class="menu-overlay" if="{{ showSwipeMenu }}">
+      <image
+        class="bg-image"
+        style="opacity: 0.4"
+        src="{{ '/common/bg/' + currentBg + '.jpg' }}"
+      ></image>
+
+      <div class="menu-container" @click="stopClick">
+        <text class="menu-time">{{ currentTime }}</text>
+        <text class="menu-title">菜单</text>
+
+        <scroll scroll-y="true" class="menu-scroll">
+          <div class="menu-btn" @click="saveGame">
+            <text class="menu-btn-text">保存进度</text>
+          </div>
+          <div class="menu-btn" @click="routeLoad">
+            <text class="menu-btn-text">读取进度</text>
+          </div>
+          <div class="menu-btn" @click="skipToOptions">
+            <text class="menu-btn-text">跳到下一个选项</text>
+          </div>
+          <div class="menu-btn {{ isAutoPlay ? 'menu-btn-active' : '' }}" @click="toggleAutoPlay">
+            <text class="menu-btn-text">{{ isAutoPlay ? "自动播放：开" : "自动播放：关" }}</text>
+          </div>
+          <div class="menu-btn" @click="returnToHome">
+            <text class="menu-btn-text">返回主页</text>
+          </div>
+          <div class="menu-btn menu-btn-close" @click="closeMenu">
+            <text class="menu-btn-text">返回游戏</text>
+          </div>
+        </scroll>
+      </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="confirm-overlay" if="{{ showConfirm }}">
+      <div class="confirm-dialog">
+        <text class="confirm-title">{{ confirmTitle }}</text>
+        <text class="confirm-message">{{ confirmMessage }}</text>
+        <div class="confirm-buttons">
+          <div class="confirm-btn confirm-btn-cancel" @click="cancelConfirm">
+            <text class="confirm-btn-text">取消</text>
+          </div>
+          <div class="confirm-btn confirm-btn-ok" @click="confirmOk">
+            <text class="confirm-btn-text">确定</text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { DEBUG, SETTINGS_KEY, AUTO_SAVE_KEY } from "../../common/constants.js"
+import { createVnEngine } from "../../engine/index.js"
+import { createAiotAdapter } from "../../engine/aiotAdapter.js"
+import { vibrateShort } from "../../common/vibrate.js"
+
+import storage from "@system.storage"
+import router from "@system.router"
+import prompt from "@system.prompt"
+import brightness from "@system.brightness"
+
+const AUTO_SAVE_INTERVAL = 3000
+const AUTO_PLAY_DELAY = 500
+const LONG_PRESS_DELAY = 600
+const SD_MAX_LEFT = 0
+const SD_MIN_LEFT = -28
+const DEFAULT_BG = "moon"
+
+export default {
+  private: {
+    currentBg: DEFAULT_BG,
+    currentEV: "",
+    currentEVSrc: "",
+    currentSD: "",
+    currentSpeaker: "",
+    fullText: "",
+    currentChapterName: "",
+    characters: { left: null, center: null, right: null },
+    currentOptions: [],
+    showOptions: false,
+    isTextComplete: false,
+    isFastForwarding: false,
+    isSkipping: false,
+    ended: false,
+
+    _engine: null,
+    _rt: null,
+    _pendingRestore: null,
+    _pendingAfterStory: null,
+    _afterStoryMode: false,
+
+    displayText: "",
+    currentCharIndex: 0,
+    showSwipeMenu: false,
+    currentTime: "00:00",
+    isUIHidden: false,
+    typeWriterTimer: null,
+    fxActive: false,
+    fxClass: "",
+    _fxTimer: null,
+
+    bottomTime: "00:00",
+    bottomTimeTimer: null,
+
+    isAutoPlay: false,
+    autoPlayTimer: null,
+
+    autoSaveEnabled: true,
+    lastAutoSaveAt: 0,
+
+    pageTouched: false,
+    pageMoved: false,
+    pageLongTimer: null,
+    ffTouched: false,
+    ffMoved: false,
+    ffLongPressTimer: null,
+    menuJustOpened: false,
+
+    sdLeft: -14,
+    sdTop: 40,
+    sdDragStartX: 0,
+    sdDragStartLeft: 0,
+    sdDragMoved: false,
+
+    isLoading: true,
+    showConfirm: false,
+    confirmTitle: "",
+    confirmMessage: "",
+    settings: {
+      textSpeed: 40,
+      textSize: 22,
+      autoPlayDelay: 500,
+      boldText: true,
+      autoSave: true,
+      keepScreenOn: false,
+      darkMode: false,
+      lowBrightness: false,
+      vibration: true
+    }
+  },
+
+  onDestroy() {
+    this.clearTimer()
+    this.clearFastForwardTimer()
+    this.clearAutoPlayTimer()
+    this.clearPageLongTimer()
+    this.clearFFLongPressTimer()
+    this.stopBottomTime()
+    if (this._fxTimer) clearTimeout(this._fxTimer)
+    if (this._rt) this._rt.destroy()
+
+    this.restoreBrightness()
+  },
+
+  onHide() {
+    this.clearTimer()
+    this.clearFastForwardTimer()
+    this.clearAutoPlayTimer()
+    this.clearPageLongTimer()
+    this.clearFFLongPressTimer()
+    this.stopBottomTime()
+    this.restoreBrightness()
+  },
+
+  onInit() {
+    storage.get({
+      key: SETTINGS_KEY,
+      success: (data) => {
+        if (data) {
+          try {
+            const parsed = JSON.parse(data)
+            Object.assign(this.settings, parsed)
+          } catch (e) {}
+        }
+      }
+    })
+    this.bootEngine()
+  },
+
+  onShow() {
+    const stateToLoad = this.$app.$def.globalGameState
+    this.autoSaveEnabled = !(stateToLoad && (stateToLoad._fromLoad || stateToLoad._fromAfterStory))
+    if (stateToLoad && stateToLoad._fromLoad) {
+      delete stateToLoad._fromLoad
+    }
+    if (stateToLoad && stateToLoad._fromAfterStory) {
+      this._pendingAfterStory = stateToLoad._fromAfterStory
+      delete stateToLoad._fromAfterStory
+    }
+
+    if (stateToLoad) {
+      this.$app.$def.globalGameState = null
+      if (this._pendingAfterStory) {
+        this._pendingRestore = null
+        if (this._rt) this.startAfterStory(this._pendingAfterStory)
+      } else {
+        this._pendingRestore = stateToLoad
+        if (this._rt) this.doRestore(stateToLoad)
+      }
+    } else if (this._rt && !this._rt.scnId) {
+      this.loadDefault()
+    }
+
+    this.captureOriginalBrightness()
+    this.applyKeepScreenOn()
+    this.startBottomTime()
+  },
+
+  /** 后日谈模式：从指定标签开始播放，播到结束哨兵自动回主页 */
+  startAfterStory(a) {
+    this._afterStoryMode = true
+    if (a && a.label && this._rt.loadByLabel) {
+      this._rt.loadByLabel(a.label).then((ok) => {
+        if (!ok) {
+          this.displayText = "后日谈加载失败"
+          this._afterStoryMode = false
+        }
+      }).catch(() => {
+        this.displayText = "后日谈加载失败"
+        this._afterStoryMode = false
+      })
+    } else if (a && a.scn) {
+      // 兼容按场景行号定位的旧写法
+      this._rt.load(a.scn, a.from || 0).catch(() => {
+        this.displayText = "后日谈加载失败"
+        this._afterStoryMode = false
+      })
+    }
+  },
+
+  // 记录用户进入游戏前的系统亮度（仅在未被本应用改动前记录一次）
+  captureOriginalBrightness() {
+    if (this._origBrightness !== undefined) return
+    try {
+      brightness.getValue({
+        success: (d) => {
+          if (this._origBrightness === undefined && !(this.settings && this.settings.lowBrightness)) {
+            this._origBrightness = d.value
+          }
+        }
+      })
+    } catch (e) {}
+  },
+
+  // 离开游戏 / 页面销毁：关闭常亮，并恢复进入前的系统亮度
+  restoreBrightness() {
+    try {
+      brightness.setKeepScreenOn({ keepScreenOn: false })
+    } catch (e) {}
+    if (this._lowBrightnessApplied) {
+      try {
+        if (this._origBrightness !== undefined) {
+          brightness.setValue({ value: this._origBrightness })
+        } else {
+          brightness.setValue({ value: 128 })
+        }
+      } catch (e) {}
+      this._lowBrightnessApplied = false
+    }
+  },
+
+  async bootEngine(retry = true) {
+    try {
+      const adapter = createAiotAdapter()
+      this._engine = await createVnEngine({
+        adapter,
+        options: { saveSlots: 4 },
+        onState: (s) => this.syncState(s),
+        onFx: (name) => this.playFx(name)
+      })
+      this._rt = this._engine.runtime
+      // 读取通关标记（隐藏线解锁 / 主菜单后日谈入口共用）
+      adapter.storageGet("galgod_clears").then((v) => {
+        let arr = []
+        try { arr = v ? JSON.parse(v) : [] } catch (e) {}
+        if (this._rt) this._rt.setClears(arr)
+      }).catch(() => {})
+      if (this._pendingAfterStory) {
+        const a = this._pendingAfterStory
+        this._pendingAfterStory = null
+        this.startAfterStory(a)
+      } else if (this._pendingRestore) {
+        this.doRestore(this._pendingRestore)
+        this._pendingRestore = null
+      } else {
+        this.loadDefault()
+      }
+    } catch (e) {
+      if (retry) {
+        // 平台 IO 偶发失败：500ms 后自动重试一次
+        setTimeout(() => this.bootEngine(false), 500)
+        return
+      }
+      this.isLoading = false
+      const msg = (e && (e.message || e.code || e.msg)) || (e ? JSON.stringify(e) : "")
+      this.displayText = "引擎初始化失败: " + (msg || "未知错误")
+      if (DEBUG) console.error("[Game] bootEngine error", e)
+    }
+  },
+
+  loadDefault() {
+    this.isLoading = true
+    this._rt.load("001")
+      .then(() => {
+        this.isLoading = false
+        // 与读档相同：平台 IO 偶发失败，新游戏首屏也重刷一次背景
+        this.refreshBackground()
+      })
+      .catch((e) => {
+        this.isLoading = false
+        this.displayText = "加载失败: " + (e && e.message)
+      })
+  },
+
+  syncState(s) {
+    this.currentBg = s.bg || DEFAULT_BG
+    this.currentEV = s.ev || ""
+    this.currentEVSrc = this.resolveEVSrc(s.ev)
+    this.currentSD = s.sd || ""
+    this.currentSpeaker = s.speaker || ""
+    this.currentChapterName = s.chapterName || ""
+    this.characters = s.characters || { left: null, center: null, right: null }
+    this.currentOptions = s.options || []
+    this.showOptions = s.showOptions
+    this.isFastForwarding = s.isFastForwarding
+    this.isSkipping = s.isSkipping
+    this.ended = s.ended
+    this.isLoading = false
+
+    const newLine = s.fullText !== this.fullText || !s.isTextComplete
+    this.fullText = s.fullText || ""
+    if (s.isTextComplete) {
+      this.clearTimer()
+      this.displayText = this.fullText
+      this.isTextComplete = true
+    } else if (newLine) {
+      this.isTextComplete = false
+      this.currentCharIndex = 0
+      this.displayText = ""
+      this.startTypeWriter()
+    }
+  },
+
+  /** EV 资源扩展名：ev* 为 .jpg，其余（sd/ef/アイテム/画面_*）为 .png */
+  resolveEVSrc(name) {
+    if (!name) return ""
+    return "/common/ev/" + name + (name.startsWith("ev") ? ".jpg" : ".png")
+  },
+
+  startTypeWriter() {
+    this.clearTimer()
+
+    if (this.currentCharIndex === 0) {
+      const scroll = this.$element("dialogueScroll")
+      if (scroll) scroll.scrollTo({ top: 0, behavior: "instant" })
+    }
+
+    if (this.currentCharIndex < this.fullText.length) {
+      this.displayText += this.fullText.charAt(this.currentCharIndex)
+      this.currentCharIndex++
+      const speed = this.isFastForwarding ? 2 : this.settings.textSpeed
+      this.typeWriterTimer = setTimeout(() => this.startTypeWriter(), speed)
+
+      if (this.currentCharIndex % 5 === 0 && this.displayText.length > 20) {
+        const sc = this.$element("dialogueScroll")
+        if (sc) sc.scrollTo({ top: 9999, behavior: "instant" })
+      }
+    } else {
+      this.finishText()
+    }
+  },
+
+  finishText() {
+    this.clearTimer()
+    this.displayText = this.fullText
+    this.isTextComplete = true
+    if (this._rt) this._rt.markTextComplete()
+
+    if (this.isAutoPlay && !this.showOptions && !this.isSkipping && !this.isFastForwarding) {
+      this.clearAutoPlayTimer()
+      const delay = (this.settings && this.settings.autoPlayDelay) || 500
+      this.autoPlayTimer = setTimeout(() => {
+        this.autoPlayNext()
+      }, delay)
+    }
+  },
+
+  autoPlayNext() {
+    if (!this._rt || this.ended || this.showOptions) return
+    this._rt.advance()
+  },
+
+  handleScreenClick() {
+    if (this.menuJustOpened) {
+      this.menuJustOpened = false
+      return
+    }
+
+    if (this.showSwipeMenu || this.isLoading || this.showOptions) return
+    this.vibrateIfEnabled()
+
+    if (this.isUIHidden) {
+      this.toggleUIVisibility()
+      return
+    }
+
+    if (this.isSkipping) {
+      if (!this.showOptions && this._rt) this._rt.skipToNextSelect()
+      return
+    }
+
+    if (!this.isTextComplete) {
+      this.finishText()
+    } else {
+      this.clearAutoPlayTimer()
+      this.advanceLine()
+    }
+  },
+
+  advanceLine() {
+    if (!this._rt) return
+    if (this.ended) {
+      // 后日谈播到结束哨兵：直接返回主页
+      if (this._afterStoryMode) {
+        this._afterStoryMode = false
+        router.back()
+        return
+      }
+      prompt.showToast({ message: "游戏结束" })
+      return
+    }
+    this._rt.advance()
+  },
+
+  handleOptionClick(index) {
+    this.vibrateIfEnabled()
+    const opt = this.currentOptions[index]
+    if (!opt || opt.enabled === false) return
+    this.showOptions = false
+    if (this._rt) this._rt.choose(index)
+  },
+
+  doFastForward() {
+    if (this._rt) this._rt.doFastForward()
+  },
+
+  stopFastForward() {
+    if (this._rt) this._rt.stopFastForward()
+  },
+
+  skipToOptions() {
+    this.showConfirmDialog("跳到下一选项", "此操作将失去当前进度，确定继续？", () => {
+      this.closeMenu()
+      if (this._rt) this._rt.skipToNextSelect()
+    })
+  },
+
+  goToPrevLine(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    this.vibrateIfEnabled()
+    if (!this._rt || !this._rt.scriptData || this._rt.scriptData.length === 0) return
+
+    const scnId = this._rt.scnId
+    let idx = this._rt.lineIndex - 1
+    while (idx >= 0) {
+      const n = this._rt.scriptData[idx]
+      if (n && n[0] === 3) break
+      idx--
+    }
+
+    if (idx < 0) {
+      prompt.showToast({ message: "已是第一句" })
+      return
+    }
+
+    this.clearAutoPlayTimer()
+    this._rt.load(scnId, idx).catch(() => {})
+  },
+
+  showConfirmDialog(title, message, action) {
+    this.confirmTitle = title
+    this.confirmMessage = message
+    this.confirmAction = action
+    this.showConfirm = true
+  },
+
+  cancelConfirm() {
+    this.showConfirm = false
+    this.confirmAction = null
+  },
+
+  confirmOk() {
+    this.showConfirm = false
+    const action = this.confirmAction
+    this.confirmAction = null
+    if (action) action()
+  },
+
+  saveGame() {
+    this.vibrateIfEnabled()
+    if (!this._rt) return
+    const currentState = this._rt.save()
+    this.closeMenu()
+    router.push({
+      uri: "pages/data",
+      params: { currentState: currentState }
+    })
+  },
+
+  routeLoad() {
+    this.vibrateIfEnabled()
+    this.closeMenu()
+    router.push({ uri: "pages/data" })
+  },
+
+  async doRestore(saved) {
+    this.isLoading = true
+    try {
+      const data = normalizeSave(saved)
+      await this._rt.restore(data)
+      this.isLoading = false
+      this.maybeAutoSave()
+      // 平台 IO 偶发失败（引擎启动已有重试，图片加载没有）：
+      // 恢复后强制重刷一次背景，避免偶发"只有立绘没有背景"
+      this.refreshBackground()
+    } catch (e) {
+      this.isLoading = false
+      this.displayText = "读档失败: " + (e && e.message)
+    }
+  },
+
+  refreshBackground() {
+    const bg = this.currentBg
+    if (!bg) return
+    this.currentBg = ""
+    setTimeout(() => {
+      this.currentBg = bg
+    }, 80)
+  },
+
+  maybeAutoSave() {
+    if (!this.autoSaveEnabled) return
+    if (!this.settings || this.settings.autoSave === false) return
+    const now = Date.now()
+    if (now - this.lastAutoSaveAt < AUTO_SAVE_INTERVAL) return
+    this.writeAutoSave()
+    this.lastAutoSaveAt = now
+  },
+
+  forceAutoSave() {
+    if (!this.autoSaveEnabled) return
+    if (!this.settings || this.settings.autoSave === false) return
+    this.writeAutoSave()
+    this.lastAutoSaveAt = Date.now()
+  },
+
+  writeAutoSave() {
+    if (!this._rt) return
+    const gameState = this._rt.save()
+    const rawText = this.fullText || ""
+    let previewContent = "..."
+    if (rawText) {
+      previewContent = rawText.length > 10 ? rawText.substring(0, 10) + "..." : rawText
+    }
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+    const hour = now.getHours().toString().padStart(2, "0")
+    const min = now.getMinutes().toString().padStart(2, "0")
+    const dateStr = `${month}/${day} ${hour}:${min}`
+
+    const entry = {
+      date: dateStr,
+      chapterName: this.currentChapterName,
+      preview: previewContent,
+      gameState: gameState
+    }
+    storage.set({ key: AUTO_SAVE_KEY, value: JSON.stringify(entry) })
+  },
+
+  playFx(name) {
+    const map = {
+      whiteflash: "fx-whiteflash",
+      blackout: "fx-blackout",
+      fadein: "fx-fadein",
+      fadeout: "fx-fadeout"
+    }
+    const cls = map[name]
+    if (!cls) return
+
+    if (this._fxTimer) clearTimeout(this._fxTimer)
+    this.fxClass = cls
+    this.fxActive = true
+    const ms = name === "whiteflash" ? 200 : 500
+    this._fxTimer = setTimeout(() => {
+      this.fxActive = false
+      this.fxClass = ""
+      this._fxTimer = null
+    }, ms)
+  },
+
+  closeMenu(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    this.showSwipeMenu = false
+  },
+
+  stopClick(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+  },
+
+  handleSwipe() {
+    this.showSwipeMenu = true
+    const now = new Date()
+    this.currentTime =
+      now.getHours().toString().padStart(2, "0") +
+      ":" +
+      now.getMinutes().toString().padStart(2, "0")
+  },
+
+  toggleUIVisibility() {
+    this.isUIHidden = !this.isUIHidden
+  },
+
+  returnToHome() {
+    const willAutoSave = this.autoSaveEnabled && this.settings && this.settings.autoSave !== false
+    this.forceAutoSave()
+    this.clearAutoPlayTimer()
+    this.stopBottomTime()
+    if (willAutoSave) {
+      prompt.showToast({ message: "进度已自动保存" })
+    }
+    router.replace({ uri: "pages/index" })
+  },
+
+  clearTimer() {
+    if (this.typeWriterTimer) {
+      clearTimeout(this.typeWriterTimer)
+      this.typeWriterTimer = null
+    }
+  },
+
+  clearFastForwardTimer() {
+    if (this._rt) this._rt.clearFastForward()
+  },
+
+  toggleAutoPlay() {
+    this.vibrateIfEnabled()
+    this.isAutoPlay = !this.isAutoPlay
+    this.applyKeepScreenOn()
+    if (this.isAutoPlay) {
+      prompt.showToast({ message: "自动播放已开启" })
+    } else {
+      this.clearAutoPlayTimer()
+      prompt.showToast({ message: "自动播放已关闭" })
+    }
+    this.closeMenu()
+  },
+
+  clearAutoPlayTimer() {
+    if (this.autoPlayTimer) {
+      clearTimeout(this.autoPlayTimer)
+      this.autoPlayTimer = null
+    }
+  },
+
+  applyKeepScreenOn() {
+    const on = this.isAutoPlay || (this.settings && this.settings.keepScreenOn)
+    try {
+      brightness.setKeepScreenOn({ keepScreenOn: !!on })
+    } catch (e) {}
+    // 仅低亮度模式调整亮度；普通模式保持系统当前亮度，不再强制拉高
+    const low = !!(this.settings && this.settings.lowBrightness)
+    try {
+      if (low) {
+        brightness.setValue({ value: 30 })
+        this._lowBrightnessApplied = true
+      } else if (this._lowBrightnessApplied) {
+        // 关闭低亮度：恢复进入游戏前的亮度
+        if (this._origBrightness !== undefined) {
+          brightness.setValue({ value: this._origBrightness })
+        } else {
+          brightness.setValue({ value: 128 })
+        }
+        this._lowBrightnessApplied = false
+      }
+    } catch (e) {}
+  },
+
+  startBottomTime() {
+    this.stopBottomTime()
+    this.updateBottomTime()
+    this.bottomTimeTimer = setInterval(() => {
+      this.updateBottomTime()
+    }, 30000)
+  },
+
+  stopBottomTime() {
+    if (this.bottomTimeTimer) {
+      clearInterval(this.bottomTimeTimer)
+      this.bottomTimeTimer = null
+    }
+  },
+
+  updateBottomTime() {
+    const now = new Date()
+    this.bottomTime =
+      now.getHours().toString().padStart(2, "0") +
+      ":" +
+      now.getMinutes().toString().padStart(2, "0")
+  },
+
+  vibrateIfEnabled() {
+    if (this.settings && this.settings.vibration === false) return
+    vibrateShort()
+  },
+
+  pageTouchStart() {
+    this.pageTouched = true
+    this.pageMoved = false
+    this.clearPageLongTimer()
+    this.pageLongTimer = setTimeout(() => {
+      if (
+        this.pageTouched &&
+        !this.pageMoved &&
+        !this.showSwipeMenu &&
+        !this.showOptions &&
+        !this.isLoading
+      ) {
+        this.menuJustOpened = true
+        this.handleSwipe()
+      }
+    }, LONG_PRESS_DELAY)
+  },
+
+  pageTouchMove() {
+    this.pageMoved = true
+    this.clearPageLongTimer()
+  },
+
+  pageTouchEnd() {
+    this.pageTouched = false
+    this.clearPageLongTimer()
+  },
+
+  clearPageLongTimer() {
+    if (this.pageLongTimer) {
+      clearTimeout(this.pageLongTimer)
+      this.pageLongTimer = null
+    }
+  },
+
+  ffTouchStart(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    if (this.showOptions) return
+    this.ffTouched = true
+    this.ffMoved = false
+    this.clearFFLongPressTimer()
+    this.ffLongPressTimer = setTimeout(() => {
+      if (this.ffTouched && !this.ffMoved) {
+        this.doFastForward()
+      }
+    }, LONG_PRESS_DELAY)
+  },
+
+  ffTouchMove(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    this.ffMoved = true
+    this.clearFFLongPressTimer()
+    this.stopFastForward()
+  },
+
+  ffTouchEnd(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    this.ffTouched = false
+    this.clearFFLongPressTimer()
+    this.stopFastForward()
+  },
+
+  clearFFLongPressTimer() {
+    if (this.ffLongPressTimer) {
+      clearTimeout(this.ffLongPressTimer)
+      this.ffLongPressTimer = null
+    }
+  },
+
+  sdTouchStart(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    const touch = event.touches && event.touches[0]
+    this.sdDragStartX = touch ? touch.clientX : 0
+    this.sdDragStartLeft = this.sdLeft
+    this.sdDragMoved = false
+  },
+
+  sdTouchMove(event) {
+    if (event && event.stopPropagation) event.stopPropagation()
+    const touch = event.touches && event.touches[0]
+    if (!touch) return
+    this.sdDragMoved = true
+    const delta = touch.clientX - this.sdDragStartX
+    let nextLeft = this.sdDragStartLeft + delta
+    nextLeft = Math.max(SD_MIN_LEFT, Math.min(SD_MAX_LEFT, nextLeft))
+    this.sdLeft = nextLeft
+  },
+
+  sdTouchEnd() {
+    this.sdDragMoved = false
+  }
+}
+
+function normalizeSave(s) {
+  if (!s) return s
+  if (s.scnId) return s
+  return {
+    scnId: s.currentScnId || "001",
+    lineIndex: parseInt(s.currentLineIndex, 10) || 0,
+    speaker: s.currentSpeaker || "",
+    fullText: s.fullText || "",
+    bg: s.currentBg || null,
+    chapterName: s.currentChapterName || "",
+    characters: null,
+    flags: s.gameFlags || {},
+    audio: null
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.bg-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.sprite {
+  position: absolute;
+  bottom: 0;
+  z-index: 3;
+}
+
+.sprite-left {
+  left: 0;
+  height: 78%;
+}
+
+.sprite-center {
+  left: 50%;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.sprite-right {
+  right: 0;
+  height: 78%;
+}
+
+.sprite.fadein {
+  animation: char-fadein 300ms ease-out;
+}
+
+.sprite.fadeout {
+  animation: char-fadeout 300ms ease-in;
+}
+
+.sprite.change {
+  animation: char-fadein 200ms ease-out;
+}
+
+@keyframes char-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes char-fadeout {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.ev-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+}
+
+.sd-image {
+  position: absolute;
+  width: 240px;
+  height: 144px;
+  z-index: 1;
+}
+
+.fx-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+}
+
+.fx-whiteflash {
+  background-color: #ffffff;
+  animation: fx-fade-out 200ms ease-out;
+}
+
+.fx-blackout {
+  background-color: #000000;
+  animation: fx-fade-out 500ms ease-out;
+}
+
+.fx-fadein {
+  background-color: #000000;
+  animation: fx-fade-in 500ms ease-out;
+}
+
+.fx-fadeout {
+  background-color: #000000;
+  animation: fx-fade-out 500ms ease-out;
+}
+
+@keyframes fx-fade-in {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fx-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.dialogue-layer {
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.speaker-box {
+  position: absolute;
+  bottom: 190px;
+  left: 12px;
+  right: 12px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(13, 110, 255, 0.85);
+  padding: 6px 14px;
+  border-radius: 16px;
+  margin-bottom: 3px;
+}
+
+.speaker-text {
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.prev-line-btn {
+  padding: 4px 14px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.prev-line-text {
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.dialogue-box {
+  position: absolute;
+  bottom: 20px;
+  left: 12px;
+  right: 12px;
+  height: 150px;
+  background-color: rgba(38, 38, 38, 0.92);
+  border-radius: 20px;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+}
+
+.scroll-view {
+  width: 100%;
+  height: 100%;
+  flex-wrap: wrap;
+  padding: 14px;
+}
+
+.typewriter-text {
+  width: 100%;
+  color: #ffffff;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+}
+
+.bottom-time {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+}
+
+.options-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.options-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.option-btn {
+  width: 100%;
+  background-color: #0d6eff;
+  padding: 16px;
+  margin: 6px 0;
+  border-radius: 24px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 置灰选项：隐藏线首周目锁定 */
+.option-disabled {
+  background-color: #3a3f4a;
+  opacity: 0.55;
+}
+
+.option-text {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.control-layer {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  flex-direction: row;
+  justify-content: center;
+  z-index: 15;
+}
+
+.control-btn {
+  padding: 8px 18px;
+  margin: 0 4px;
+  background-color: rgba(38, 38, 38, 0.85);
+  border-radius: 16px;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-btn-text {
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.menu-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 30;
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.menu-container {
+  width: 86%;
+  height: 88%;
+  padding: 16px;
+  background-color: #1a1a1a;
+  border-radius: 24px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-time {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.menu-title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.menu-scroll {
+  width: 100%;
+  flex: 1;
+  flex-direction: column;
+}
+
+.menu-btn {
+  width: 100%;
+  height: 52px;
+  margin-bottom: 8px;
+  background-color: #262626;
+  border-radius: 24px;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-btn-active {
+  background-color: rgba(13, 110, 255, 0.25);
+}
+
+.menu-btn-close {
+  background-color: #0d6eff;
+  margin-top: 4px;
+}
+
+.menu-btn-text {
+  color: #ffffff;
+  font-size: 19px;
+}
+
+.confirm-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.confirm-dialog {
+  width: 88%;
+  max-width: 300px;
+  background-color: #262626;
+  border-radius: 20px;
+  padding: 20px 16px;
+  align-items: center;
+}
+
+.confirm-title {
+  width: 100%;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  width: 100%;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  lines: -1;
+  line-height: 22px;
+  margin-bottom: 18px;
+}
+
+.confirm-buttons {
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.confirm-btn {
+  flex: 1;
+  height: 42px;
+  margin: 0 5px;
+  border-radius: 21px;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-btn-cancel {
+  background-color: #3a3a3a;
+}
+
+.confirm-btn-ok {
+  background-color: #0d6eff;
+}
+
+.confirm-btn-text {
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+</style>

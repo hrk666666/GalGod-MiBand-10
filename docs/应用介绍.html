@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>千恋＊万花 - 应用介绍</title>
+</head>
+<body style="margin:0;padding:24px;background:#f2f2f4;font-family:'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif;color:#1d1d1f;line-height:1.75;">
+
+<div style="max-width:720px;margin:0 auto;">
+
+  <!-- 复制按钮 -->
+  <div style="text-align:center;margin-bottom:14px;">
+    <button id="copyBtn" onclick="copyRich()" style="background:#d44a4a;color:#ffffff;border:none;border-radius:999px;padding:12px 28px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 4px 14px rgba(212,74,74,0.35);">复制富文本</button>
+    <div style="font-size:12px;color:#a0a0a6;margin-top:6px;">复制后可直接粘贴到公众号、飞书、邮件等富文本编辑器</div>
+  </div>
+
+  <!-- 复制源（介绍主体） -->
+  <div id="copySource" style="background:#ffffff;border-radius:32px;padding:36px 32px;">
+
+    <!-- 头部 -->
+    <div style="text-align:center;padding:4px 0 14px;">
+      <div style="font-size:30px;font-weight:bold;letter-spacing:2px;color:#1d1d1f;">千恋＊万花</div>
+      <div style="font-size:15px;color:#86868b;margin-top:4px;">SAGA PLANETS 全年龄恋爱冒险作品</div>
+      <div style="margin-top:12px;">
+        <svg width="200" height="10" viewBox="0 0 200 10" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;"><rect x="0" y="1" width="80" height="8" rx="4" fill="#d44a4a"/><rect x="88" y="1" width="8" height="8" rx="4" fill="#d44a4a"/><rect x="104" y="1" width="96" height="8" rx="4" fill="#e8e8ea"/></svg>
+      </div>
+    </div>
+
+    <!-- 作品简介 -->
+    <div style="background:#f8f8fa;border-radius:24px;padding:20px 22px;margin-top:6px;">
+      <div style="font-size:17px;font-weight:bold;color:#d44a4a;letter-spacing:1px;margin-bottom:8px;">作品简介</div>
+      <div style="font-size:14.5px;color:#3a3a3c;">《千恋＊万花》是日本游戏公司 SAGA PLANETS 制作的全年龄恋爱冒险游戏。本作完整收录原作的全部剧情、立绘与事件演出，在忠于原作的基础上提供完整的游玩体验。</div>
+    </div>
+
+    <!-- 游戏内容 -->
+    <div style="background:#ffffff;border-radius:24px;padding:20px 22px;margin-top:14px;">
+      <div style="font-size:17px;font-weight:bold;color:#d44a4a;letter-spacing:1px;margin-bottom:12px;">游戏内容</div>
+      <table style="width:100%;border-collapse:separate;border-spacing:0 10px;">
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><path d="M11 10h14c1.7 0 3 1.3 3 3v18c-2-.7-4.3-.7-6.3.2L20 32l-1.7-1c-2-.9-4.3-.9-6.3-.2V10z" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">完整剧本</div>
+            <div style="font-size:13.5px;color:#6e6e73;">112 个场景 · 7.4 万剧情节点 · 89 个选项分支</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><rect x="11" y="9" width="18" height="14" rx="3" stroke="#ffffff" stroke-width="1.6" fill="none"/><path d="M15 16h10M15 19.5h7" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/><path d="M16 27l3.2-4.5 2.5 3.4 2.8-3.9" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">美术资源</div>
+            <div style="font-size:13.5px;color:#6e6e73;">92 张背景 · 141 张角色立绘 · 570 张事件演出图（CG）</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><path d="M9 15a6 6 0 016-6h10a6 6 0 016 6v4.8a6 6 0 01-6 6H18l-5.4 5V25.6a6 6 0 01-3.6-5.5V15z" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">全中文文本</div>
+            <div style="font-size:13.5px;color:#6e6e73;">支持选项分支与多线路推进，剧情选择实时生效</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 核心功能 -->
+    <div style="background:#fdf3f3;border-radius:24px;padding:20px 22px;margin-top:14px;">
+      <div style="font-size:17px;font-weight:bold;color:#d44a4a;letter-spacing:1px;margin-bottom:12px;">核心功能</div>
+      <table style="width:100%;border-collapse:separate;border-spacing:0 10px;">
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><path d="M12 9h16a1.5 1.5 0 011.5 1.5V31L20 26l-9.5 5V10.5A1.5 1.5 0 0112 9z" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linejoin="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">存档系统</div>
+            <div style="font-size:13.5px;color:#6e6e73;">自动存档与手动存档，「从上次开始」快速续玩，多档位读取进度</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><circle cx="20" cy="20" r="5.5" stroke="#ffffff" stroke-width="1.6" fill="none"/><path d="M20 8v3.5M20 28.5V32M8 20h3.5M28.5 20H32M11.6 11.6l2.5 2.5M25.9 25.9l2.5 2.5M28.4 11.6l-2.5 2.5M14.1 25.9l-2.5 2.5" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">系统设定</div>
+            <div style="font-size:13.5px;color:#6e6e73;">字号大小、粗体、屏幕常亮、低亮度模式、暗色模式、振动反馈</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><path d="M11 9.5l16 11-16 11v-22z" stroke="#ffffff" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M27 9.5v22" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">阅读辅助</div>
+            <div style="font-size:13.5px;color:#6e6e73;">自动播放、快进、回看上一句、一键跳到下一选项</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top;width:56px;padding:0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="38" height="38" rx="13" fill="#d44a4a"/><circle cx="20" cy="20" r="9.5" stroke="#ffffff" stroke-width="1.6" fill="none"/><path d="M20 14v6l4 2.6" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </td>
+          <td style="vertical-align:top;padding:0;">
+            <div style="font-size:15px;font-weight:bold;">时间显示</div>
+            <div style="font-size:13.5px;color:#6e6e73;">会话内实时显示当前时间，长时间阅读不误时</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 适配设备 -->
+    <div style="background:#f8f8fa;border-radius:24px;padding:20px 22px;margin-top:14px;">
+      <div style="font-size:17px;font-weight:bold;color:#d44a4a;letter-spacing:1px;margin-bottom:12px;">适配设备</div>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr style="background:#ffffff;">
+          <td style="padding:10px 12px;border-bottom:1px solid #ececec;width:88px;vertical-align:top;">
+            <div style="font-weight:bold;">标准版</div>
+            <div style="font-size:11.5px;color:#a0a0a6;margin-top:2px;">胶囊屏</div>
+          </td>
+          <td style="padding:10px 12px;border-bottom:1px solid #ececec;vertical-align:top;">
+            <div>小米手环 9 / 10 / 11</div>
+            <div style="font-size:12px;color:#86868b;margin-top:3px;">包名 com.hrk.qlwh.band</div>
+          </td>
+        </tr>
+        <tr style="background:#ffffff;">
+          <td style="padding:10px 12px;border-bottom:1px solid #ececec;width:88px;vertical-align:top;">
+            <div style="font-weight:bold;">Pro 版</div>
+            <div style="font-size:11.5px;color:#a0a0a6;margin-top:2px;">方屏</div>
+          </td>
+          <td style="padding:10px 12px;border-bottom:1px solid #ececec;vertical-align:top;">
+            <div>小米手环 8 Pro / 9 Pro / 10 Pro / REDMI Watch 5 / REDMI Watch 6</div>
+            <div style="font-size:12px;color:#86868b;margin-top:3px;">包名 com.hrk.qlwh.bandp</div>
+          </td>
+        </tr>
+        <tr style="background:#ffffff;">
+          <td style="padding:10px 12px;width:88px;vertical-align:top;">
+            <div style="font-weight:bold;">自适应版</div>
+            <div style="font-size:11.5px;color:#a0a0a6;margin-top:2px;">全设备</div>
+          </td>
+          <td style="padding:10px 12px;vertical-align:top;">
+            <div>以上全部设备，自动适配胶囊与方屏</div>
+            <div style="font-size:12px;color:#86868b;margin-top:3px;">包名 com.hrk.qlwh.bandauto</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 声明 -->
+    <div style="background:#1d1d1f;border-radius:24px;padding:18px 22px;margin-top:16px;font-size:12.5px;color:#d2d2d7;line-height:1.85;">
+      <div><b style="color:#ffffff;">版权声明</b>：本作品的角色、剧情、美术等全部内容版权归原厂商 SAGA PLANETS 所有。本作由爱好者独立移植制作，仅供个人学习与交流，禁止用于任何商业用途，禁止二次分发与修改后发布。</div>
+      <div style="margin-top:6px;"><b style="color:#ffffff;">非从属关系声明</b>：本作与 SAGA PLANETS、其关联公司以及任何硬件厂商均无从属、赞助或合作关系，不为其官方授权产品；任何相关主体名称仅用于客观描述，不构成商标或品牌关联。</div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid #3a3a3c;">
+        <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:-4px;margin-right:6px;"><rect x="0.5" y="0.5" width="23" height="23" rx="8" fill="#ffffff" fill-opacity="0.12"/><path d="M8 15.5l-2.5-3.5L8 8.5M16 8.5l2.5 3.5L16 15.5M13.5 6.5l-3 11" stroke="#ff8a8a" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        程序部分以 GNU GPL v3.0 协议开源 · 作者 hrk_ · <a href="https://github.com/hrk666666/Senren-Banka-MiBand-10" style="color:#ff8a8a;">开源地址</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function copyRich() {
+  var src = document.getElementById('copySource');
+  var clone = src.cloneNode(true);
+  // 剔除装饰性 SVG，避免目标编辑器解析异常
+  clone.querySelectorAll('svg').forEach(function (s) { s.parentNode.removeChild(s); });
+  var html = clone.innerHTML;
+  var plain = clone.innerText || clone.textContent;
+  var btn = document.getElementById('copyBtn');
+
+  function done() {
+    btn.textContent = '已复制';
+    setTimeout(function () { btn.textContent = '复制富文本'; }, 1500);
+  }
+  function fallback() {
+    var tmp = document.createElement('div');
+    tmp.setAttribute('contenteditable', 'true');
+    tmp.style.position = 'fixed';
+    tmp.style.left = '-9999px';
+    tmp.innerHTML = html;
+    document.body.appendChild(tmp);
+    var range = document.createRange();
+    range.selectNodeContents(tmp);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    try { document.execCommand('copy'); done(); } catch (e) { btn.textContent = '复制失败，请手动选择复制'; }
+    document.body.removeChild(tmp);
+    window.getSelection().removeAllRanges();
+  }
+
+  if (navigator.clipboard && navigator.clipboard.write) {
+    try {
+      navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([plain], { type: 'text/plain' })
+        })
+      ]).then(done, fallback);
+      return;
+    } catch (e) { fallback(); }
+  } else {
+    fallback();
+  }
+}
+</script>
+
+</body>
+</html>

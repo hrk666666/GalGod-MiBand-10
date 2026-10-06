@@ -1,0 +1,146 @@
+{
+  "id": "galgod-band",
+  "title": "想成为Galgame领域大神！！！",
+  "version": "1.0.0",
+  "engine": {
+    "format": "vn-1.1",
+    "minRuntime": "1.0"
+  },
+  "initialState": {
+    "flags": {
+      "true_end_flag": 0,
+      "bad_end_flag": 0,
+      "true_end_finish": 0
+    }
+  },
+  "resources": {
+    "base": "/common",
+    "dirs": {
+      "bg": "bg",
+      "sd": "sd",
+      "ev": "ev",
+      "ch": "ch",
+      "audio": "audio"
+    }
+  },
+  "scenarios": {
+    "main": [
+      {
+        "id": "001",
+        "path": "chunk001.txt"
+      },
+      {
+        "id": "002",
+        "path": "chunk002.txt"
+      },
+      {
+        "id": "003",
+        "path": "chunk003.txt"
+      },
+      {
+        "id": "004",
+        "path": "chunk004.txt"
+      },
+      {
+        "id": "005",
+        "path": "chunk005.txt"
+      },
+      {
+        "id": "006",
+        "path": "chunk006.txt"
+      },
+      {
+        "id": "007",
+        "path": "chunk007.txt"
+      },
+      {
+        "id": "008",
+        "path": "chunk008.txt"
+      },
+      {
+        "id": "009",
+        "path": "chunk009.txt"
+      },
+      {
+        "id": "010",
+        "path": "chunk010.txt"
+      },
+      {
+        "id": "011",
+        "path": "chunk011.txt"
+      },
+      {
+        "id": "012",
+        "path": "chunk012.txt"
+      },
+      {
+        "id": "013",
+        "path": "chunk013.txt"
+      },
+      {
+        "id": "014",
+        "path": "chunk014.txt"
+      },
+      {
+        "id": "015",
+        "path": "chunk015.txt"
+      },
+      {
+        "id": "016",
+        "path": "chunk016.txt"
+      },
+      {
+        "id": "017",
+        "path": "chunk017.txt"
+      },
+      {
+        "id": "018",
+        "path": "chunk018.txt"
+      },
+      {
+        "id": "019",
+        "path": "chunk019.txt"
+      },
+      {
+        "id": "020",
+        "path": "chunk020.txt"
+      },
+      {
+        "id": "021",
+        "path": "chunk021.txt"
+      },
+      {
+        "id": "022",
+        "path": "chunk022.txt"
+      },
+      {
+        "id": "023",
+        "path": "chunk023.txt"
+      },
+      {
+        "id": "024",
+        "path": "chunk024.txt"
+      },
+      {
+        "id": "025",
+        "path": "chunk025.txt"
+      },
+      {
+        "id": "026",
+        "path": "chunk026.txt"
+      },
+      {
+        "id": "027",
+        "path": "chunk027.txt"
+      },
+      {
+        "id": "028",
+        "path": "chunk028.txt"
+      },
+      {
+        "id": "029",
+        "path": "chunk029.txt"
+      }
+    ]
+  }
+}

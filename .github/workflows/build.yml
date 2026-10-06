@@ -1,0 +1,49 @@
+name: Build RPK
+
+on:
+  push:
+    branches: [main, master, no-image]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Validate content package
+        run: python3 tools/validate_qlwh.py
+
+      - name: Build release (RPK, JSC bytecode)
+        run: npm run release
+
+      - name: List output
+        run: |
+          echo "=== dist/ ===" && ls -la dist/ 2>/dev/null || echo "no dist dir"
+          echo "=== build/ ===" && ls -la build/ 2>/dev/null || echo "no build dir"
+          echo "=== out/ ===" && ls -la out/ 2>/dev/null || echo "no out dir"
+          echo "=== find .rpk ===" && find . -name "*.rpk" 2>/dev/null || echo "no rpk found"
+
+      - name: Upload RPK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qlwh-senren-banka-rpk
+          path: |
+            dist/
+            build/
+            out/
+            **/*.rpk
+          if-no-files-found: error

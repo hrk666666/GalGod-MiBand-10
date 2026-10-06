@@ -1,0 +1,472 @@
+<template>
+  <div class="page" @swipe="handleSwipe">
+    <!-- 背景 -->
+    <image class="bg-image" src="/common/title_bg.jpg"></image>
+
+    <!-- 顶部标题区 -->
+    <div class="header">
+      <text class="header-title">GalGod</text>
+    </div>
+
+    <!-- 药丸卡片列表 -->
+    <scroll scroll-y="true" class="list">
+      <div class="item" @click="routeContinue">
+        <text class="itemtext">从上次开始</text>
+        <image class="arrow" src="/common/images/enter.png"></image>
+      </div>
+      <div class="item" @click="routeGame">
+        <text class="itemtext">开始游戏</text>
+        <image class="arrow" src="/common/images/enter.png"></image>
+      </div>
+      <div class="item" @click="routeLoad">
+        <text class="itemtext">读取存档</text>
+        <image class="arrow" src="/common/images/enter.png"></image>
+      </div>
+      <div class="item" @click="routeAfterStory">
+        <text class="itemtext">后日谈</text>
+        <image class="arrow" src="/common/images/enter.png"></image>
+      </div>
+      <div class="item" @click="routeSetting">
+        <text class="itemtext">系统设定</text>
+        <image class="arrow" src="/common/images/enter.png"></image>
+      </div>
+      <div class="item" @click="routeAbout">
+        <text class="itemtext">关于本篇</text>
+        <image class="arrow" src="/common/images/enter.png"></image>
+      </div>
+      <div class="item item-danger" @click="exitApp">
+        <text class="itemtext itemtext-danger">退出游戏</text>
+      </div>
+    </scroll>
+
+    <!-- 后日谈选择 -->
+    <div class="confirm-overlay" if="{{ showAfterStory }}">
+      <div class="after-dialog">
+        <text class="confirm-title">后日谈</text>
+        <text class="confirm-message">达成真结局后解锁</text>
+        <scroll scroll-y="true" class="after-list">
+          <div
+            class="after-item {{ clears.indexOf('全剧终') !== -1 ? '' : 'after-item-locked' }}"
+            @click="startAfterStory"
+          >
+            <text class="after-item-text">{{ afterStoryItem.name }}</text>
+            <text class="after-item-state">{{ clears.indexOf('全剧终') !== -1 ? '可阅读' : '未解锁' }}</text>
+          </div>
+        </scroll>
+        <div class="confirm-buttons">
+          <div class="confirm-btn confirm-btn-cancel" @click="closeAfterStory">
+            <text class="confirm-btn-text">返回</text>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="confirm-overlay" if="{{ showConfirm }}">
+      <div class="confirm-dialog">
+        <text class="confirm-title">{{ confirmTitle }}</text>
+        <text class="confirm-message">{{ confirmMessage }}</text>
+        <div class="confirm-buttons">
+          <div class="confirm-btn confirm-btn-cancel" @click="cancelConfirm">
+            <text class="confirm-btn-text">取消</text>
+          </div>
+          <div class="confirm-btn confirm-btn-ok" @click="confirmOk">
+            <text class="confirm-btn-text">确定</text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import prompt from "@system.prompt"
+import storage from "@system.storage"
+import {DEBUG, SETTINGS_KEY, AUTO_SAVE_KEY, CLEARS_KEY, AFTER_STORY} from "../../common/constants.js"
+import {vibrateShort} from "../../common/vibrate.js"
+
+export default {
+  data: {
+    isNavigating: false,
+    navTimer: null,
+    showConfirm: false,
+    confirmTitle: "",
+    confirmMessage: "",
+    clears: [],
+    showAfterStory: false,
+    afterStoryItem: AFTER_STORY,
+    settings: {
+      darkMode: false,
+      vibration: true
+    }
+  },
+
+  loadClears() {
+    storage.get({
+      key: CLEARS_KEY,
+      success: (data) => {
+        if (data) {
+          try {
+            const parsed = JSON.parse(data)
+            this.clears = Array.isArray(parsed) ? parsed : []
+          } catch (e) {
+            this.clears = []
+          }
+        }
+      }
+    })
+  },
+
+  onInit() {
+    this.isNavigating = false
+    this.clearNavTimer()
+    this.loadClears()
+
+    storage.get({
+      key: SETTINGS_KEY,
+      success: (data) => {
+        if (data) {
+          try {
+            const parsed = JSON.parse(data)
+            Object.assign(this.settings, parsed)
+            if (DEBUG) console.log("[Index] 设置加载成功")
+          } catch (e) {}
+        }
+      }
+    })
+  },
+
+  onShow() {
+    this.isNavigating = false
+    this.clearNavTimer()
+    this.loadClears()
+  },
+
+  clearNavTimer() {
+    if (this.navTimer) {
+      clearTimeout(this.navTimer)
+      this.navTimer = null
+    }
+  },
+
+  vibrateIfEnabled() {
+    if (this.settings && this.settings.vibration === false) return
+    vibrateShort()
+  },
+
+  routeContinue() {
+    if (this.isNavigating) return
+    this.isNavigating = true
+    this.vibrateIfEnabled()
+
+    const done = () => {
+      this.navTimer = setTimeout(() => {
+        this.isNavigating = false
+      }, 2000)
+    }
+
+    storage.get({
+      key: AUTO_SAVE_KEY,
+      success: (data) => {
+        if (data) {
+          try {
+            const entry = JSON.parse(data)
+            if (entry && entry.gameState) {
+              this.$app.$def.globalGameState = entry.gameState
+              router.push({uri: "/pages/game"})
+              done()
+              return
+            }
+          } catch (e) {}
+        }
+        prompt.showToast({message: "暂无自动存档"})
+        done()
+      },
+      fail: () => {
+        prompt.showToast({message: "暂无自动存档"})
+        done()
+      }
+    })
+  },
+
+  routeGame() {
+    this.showConfirmDialog("重开游戏", "此操作将覆盖自动存档和当前进度，确定继续？", () => {
+      if (this.isNavigating) return
+      this.isNavigating = true
+      this.vibrateIfEnabled()
+      router.push({uri: "/pages/game"})
+      this.navTimer = setTimeout(() => { this.isNavigating = false }, 2000)
+    })
+  },
+
+  showConfirmDialog(title, message, action) {
+    this.confirmTitle = title
+    this.confirmMessage = message
+    this.confirmAction = action
+    this.showConfirm = true
+  },
+
+  cancelConfirm() {
+    this.showConfirm = false
+    this.confirmAction = null
+  },
+
+  confirmOk() {
+    this.showConfirm = false
+    const action = this.confirmAction
+    this.confirmAction = null
+    if (action) action()
+  },
+
+  routeLoad() {
+    if (this.isNavigating) return
+    this.isNavigating = true
+    this.vibrateIfEnabled()
+    router.push({uri: "/pages/data"})
+    this.navTimer = setTimeout(() => { this.isNavigating = false }, 2000)
+  },
+
+  routeSetting() {
+    if (this.isNavigating) return
+    this.isNavigating = true
+    this.vibrateIfEnabled()
+    router.push({uri: "/pages/settings"})
+    this.navTimer = setTimeout(() => { this.isNavigating = false }, 2000)
+  },
+
+  routeAfterStory() {
+    if (this.isNavigating) return
+    this.isNavigating = true
+    this.vibrateIfEnabled()
+    this.showAfterStory = true
+    this.navTimer = setTimeout(() => { this.isNavigating = false }, 2000)
+  },
+
+  closeAfterStory() {
+    this.showAfterStory = false
+  },
+
+  startAfterStory() {
+    if (this.isNavigating) return
+    // 只有真结局通关（clears 里有「全剧终」）才解锁后日谈
+    if (this.clears.indexOf("全剧终") === -1) {
+      prompt.showToast({ message: "未解锁：先达成真结局「这片月幕」" })
+      return
+    }
+    this.isNavigating = true
+    this.vibrateIfEnabled()
+    this.showAfterStory = false
+    this.$app.$def.globalGameState = {
+      _fromAfterStory: { label: AFTER_STORY.label }
+    }
+    router.push({ uri: "/pages/game" })
+    this.navTimer = setTimeout(() => { this.isNavigating = false }, 2000)
+  },
+
+  routeAbout() {
+    if (this.isNavigating) return
+    this.isNavigating = true
+    this.vibrateIfEnabled()
+    router.push({uri: "/pages/about"})
+    this.navTimer = setTimeout(() => { this.isNavigating = false }, 2000)
+  },
+
+  exitApp() {
+    this.vibrateIfEnabled()
+    try {
+      this.$app.exit()
+    } catch (e) {
+      prompt.showToast({message: "无法退出"})
+    }
+  },
+
+  handleSwipe() {}
+}
+</script>
+
+<style>
+.page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.header {
+  position: absolute;
+  top: 20px;
+  width: 100%;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.list {
+  position: absolute;
+  top: 80px;
+  left: 12px;
+  right: 12px;
+  bottom: 16px;
+  flex-direction: column;
+}
+
+.item {
+  width: 100%;
+  height: 56px;
+  margin-bottom: 8px;
+  padding: 0 18px;
+  background-color: #262626;
+  border-radius: 26px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.itemtext {
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffffff;
+  lines: -1;
+}
+
+.arrow {
+  width: 24px;
+  height: 24px;
+}
+
+.item-danger {
+  background-color: rgba(255, 59, 48, 0.15);
+}
+
+.itemtext-danger {
+  color: #ff3b30;
+}
+
+.confirm-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.confirm-dialog {
+  width: 88%;
+  max-width: 300px;
+  background-color: #262626;
+  border-radius: 20px;
+  padding: 20px 16px;
+  align-items: center;
+}
+
+.confirm-title {
+  width: 100%;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  width: 100%;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  lines: -1;
+  line-height: 22px;
+  margin-bottom: 18px;
+}
+
+.confirm-buttons {
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.confirm-btn {
+  flex: 1;
+  height: 42px;
+  margin: 0 5px;
+  border-radius: 21px;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-btn-cancel {
+  background-color: #3a3a3a;
+}
+
+.confirm-btn-ok {
+  background-color: #0d6eff;
+}
+
+.confirm-btn-text {
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* 后日谈选择层 */
+.after-dialog {
+  width: 88%;
+  max-width: 300px;
+  background-color: #262626;
+  border-radius: 20px;
+  padding: 20px 16px;
+  align-items: center;
+}
+
+.after-list {
+  width: 100%;
+  height: 240px;
+  flex-direction: column;
+}
+
+.after-item {
+  width: 100%;
+  height: 44px;
+  margin-bottom: 8px;
+  padding: 0 14px;
+  background-color: #0d6eff;
+  border-radius: 22px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.after-item-locked {
+  background-color: #3a3a3a;
+  opacity: 0.6;
+}
+
+.after-item-text {
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.after-item-state {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+</style>

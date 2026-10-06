@@ -1,0 +1,13 @@
+<script>
+export default {
+  globalGameState: null,
+
+  onCreate() {
+    console.log("App created")
+  },
+
+  onDestroy() {
+    console.log("App destroyed")
+  }
+}
+</script>

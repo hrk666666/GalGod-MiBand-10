@@ -1,0 +1,371 @@
+<template>
+  <div class="page" @swipe="handleSwipe">
+    <image class="bg-image" src="/common/title_bg.jpg"></image>
+
+    <!-- 顶部标题 -->
+    <div class="header">
+      <text class="header-title">系统设定</text>
+    </div>
+
+    <!-- 设置列表 -->
+    <scroll scroll-y="true" class="list">
+      <!-- 文字速度 -->
+      <div class="card">
+        <text class="card-label">文字速度</text>
+        <text class="card-value">{{ settings.textSpeed }}ms</text>
+      </div>
+      <slider
+        class="slider"
+        min="20"
+        max="100"
+        step="5"
+        value="{{ settings.textSpeed }}"
+        @change="changeTextSpeed"
+      ></slider>
+
+      <!-- 文字大小 -->
+      <div class="card">
+        <text class="card-label">文字大小</text>
+        <text class="card-value">{{ settings.textSize }}px</text>
+      </div>
+      <slider
+        class="slider"
+        min="10"
+        max="30"
+        step="1"
+        value="{{ settings.textSize }}"
+        @change="changeTextSize"
+      ></slider>
+
+      <!-- 自动播放间隔 -->
+      <div class="card">
+        <text class="card-label">自动播放间隔</text>
+        <text class="card-value">{{ settings.autoPlayDelay }}ms</text>
+      </div>
+      <slider
+        class="slider"
+        min="500"
+        max="3000"
+        step="100"
+        value="{{ settings.autoPlayDelay }}"
+        @change="changeAutoPlayDelay"
+      ></slider>
+
+      <!-- 功能开关 -->
+      <div class="card switch-row" @click="toggleBoldText">
+        <text class="card-label">文字加粗</text>
+        <image class="switch-img" src="/common/images/{{ settings.boldText ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
+      <div class="card switch-row" @click="toggleAutoSave">
+        <text class="card-label">自动保存</text>
+        <image class="switch-img" src="/common/images/{{ settings.autoSave ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
+      <div class="card switch-row" @click="toggleKeepScreenOn">
+        <text class="card-label">屏幕常亮</text>
+        <image class="switch-img" src="/common/images/{{ settings.keepScreenOn ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
+      <div class="card switch-row" @click="toggleLowBrightness">
+        <text class="card-label">低亮度模式</text>
+        <image class="switch-img" src="/common/images/{{ settings.lowBrightness ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
+      <div class="card switch-row" @click="toggleVibration">
+        <text class="card-label">振动反馈</text>
+        <image class="switch-img" src="/common/images/{{ settings.vibration ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
+    </scroll>
+
+    <!-- 底部操作栏 -->
+    <div class="footer">
+      <div class="footer-btn" @click="saveSettings">
+        <text class="footer-btn-text">保存</text>
+      </div>
+      <div class="footer-btn" @click="back">
+        <text class="footer-btn-text">返回</text>
+      </div>
+    </div>
+
+    <!-- 打字机预览 -->
+    <div class="preview-box">
+      <scroll scroll-y="true" class="preview-scroll" id="dialogueScroll">
+        <text
+          class="preview-text"
+          style="font-size: {{ settings.textSize }}px; line-height: {{ settings.textSize * 1.3 }}px; font-weight: {{ settings.boldText ? 'bold' : 'normal' }};"
+        >
+          {{ displayText }}
+        </text>
+      </scroll>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import storage from "@system.storage"
+import {DEBUG, SETTINGS_KEY} from "../../common/constants.js"
+import {vibrateShort} from "../../common/vibrate.js"
+
+export default {
+  data: {
+    text: "「诅咒解开之后，那种事情应该也不会再发生了。」",
+    displayText: "",
+    currentCharIndex: 0,
+
+    settings: {
+      textSpeed: 40,
+      textSize: 22,
+      autoPlayDelay: 500,
+      boldText: true,
+      autoSave: true,
+      keepScreenOn: false,
+      darkMode: false,
+      lowBrightness: false,
+      vibration: true
+    }
+  },
+
+  onInit() {
+    this.timer = null
+
+    storage.get({
+      key: SETTINGS_KEY,
+      success: (data) => {
+        if (data) {
+          try {
+            const parsed = JSON.parse(data)
+            Object.assign(this.settings, parsed)
+          } catch (e) {}
+        }
+        this.showTypeWriterEffect()
+      }
+    })
+  },
+
+  showTypeWriterEffect() {
+    if (this.timer) clearTimeout(this.timer)
+
+    if (this.currentCharIndex === 0) {
+      this.$element("dialogueScroll").scrollTo({ top: 0, behavior: "instant" })
+    }
+
+    if (this.currentCharIndex < this.text.length) {
+      this.displayText += this.text.charAt(this.currentCharIndex)
+      this.currentCharIndex++
+
+      this.timer = setTimeout(() => {
+        this.showTypeWriterEffect()
+      }, this.settings.textSpeed)
+
+      if (this.currentCharIndex % 5 === 0 && this.displayText.length > 20) {
+        this.$element("dialogueScroll").scrollTo({ top: 9999, behavior: "instant" })
+      }
+    } else {
+      this.timer = setTimeout(() => {
+        this.currentCharIndex = 0
+        this.displayText = ""
+        this.showTypeWriterEffect()
+      }, 2000)
+    }
+  },
+
+  saveSettings() {
+    vibrateShort()
+    storage.set({
+      key: SETTINGS_KEY,
+      value: JSON.stringify(this.settings),
+      success: () => { this.back() },
+      fail: () => {}
+    })
+  },
+
+  changeTextSpeed(e) {
+    const value = e.progress !== undefined ? e.progress : e.value
+    if (value !== undefined) this.settings.textSpeed = value
+  },
+
+  changeTextSize(e) {
+    const value = e.progress !== undefined ? e.progress : e.value
+    if (value !== undefined) this.settings.textSize = value
+  },
+
+  changeAutoPlayDelay(e) {
+    const value = e.progress !== undefined ? e.progress : e.value
+    if (value !== undefined) this.settings.autoPlayDelay = value
+  },
+
+  toggleBoldText() {
+    this.settings.boldText = !this.settings.boldText
+    vibrateShort()
+  },
+
+  toggleAutoSave() {
+    this.settings.autoSave = !this.settings.autoSave
+    vibrateShort()
+  },
+
+  toggleKeepScreenOn() {
+    this.settings.keepScreenOn = !this.settings.keepScreenOn
+    vibrateShort()
+  },
+
+  toggleLowBrightness() {
+    this.settings.lowBrightness = !this.settings.lowBrightness
+    vibrateShort()
+  },
+
+  toggleVibration() {
+    this.settings.vibration = !this.settings.vibration
+    vibrateShort()
+  },
+
+  handleSwipe() {},
+
+  onDestroy() {
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = null
+    }
+  },
+
+  back() {
+    vibrateShort()
+    router.back()
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.bg-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+}
+
+.header {
+  position: absolute;
+  top: 20px;
+  width: 100%;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.list {
+  position: absolute;
+  top: 76px;
+  left: 12px;
+  right: 12px;
+  bottom: 160px;
+  flex-direction: column;
+}
+
+.card {
+  width: 100%;
+  min-height: 56px;
+  margin-bottom: 8px;
+  padding: 10px 16px;
+  background-color: #262626;
+  border-radius: 26px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-label {
+  font-size: 19px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  lines: -1;
+}
+
+.card-value {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  lines: -1;
+  margin-top: 2px;
+}
+
+.slider {
+  height: 32px;
+  width: 100%;
+  margin-bottom: 12px;
+  selected-color: #0d6eff;
+  block-color: #0d6eff;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.switch-row {
+  margin-bottom: 8px;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.switch-img {
+  width: 48px;
+  height: 28px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 130px;
+  left: 12px;
+  right: 12px;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.footer-btn {
+  flex: 1;
+  height: 48px;
+  margin: 0 6px;
+  background-color: #0d6eff;
+  border-radius: 24px;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-btn-text {
+  font-size: 21px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.preview-box {
+  position: absolute;
+  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  height: 96px;
+  background-color: #262626;
+  border-radius: 20px;
+  padding: 12px;
+}
+
+.preview-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.preview-text {
+  width: 100%;
+  color: #ffffff;
+  text-align: left;
+}
+</style>

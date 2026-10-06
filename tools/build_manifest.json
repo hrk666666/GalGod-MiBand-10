@@ -1,0 +1,992 @@
+{
+ "blocks": [
+  {
+   "id": "001",
+   "path": "chunk001.txt",
+   "nodes": 212
+  },
+  {
+   "id": "002",
+   "path": "chunk002.txt",
+   "nodes": 309
+  },
+  {
+   "id": "003",
+   "path": "chunk003.txt",
+   "nodes": 8
+  },
+  {
+   "id": "004",
+   "path": "chunk004.txt",
+   "nodes": 215
+  },
+  {
+   "id": "005",
+   "path": "chunk005.txt",
+   "nodes": 197
+  },
+  {
+   "id": "006",
+   "path": "chunk006.txt",
+   "nodes": 95
+  },
+  {
+   "id": "007",
+   "path": "chunk007.txt",
+   "nodes": 293
+  },
+  {
+   "id": "008",
+   "path": "chunk008.txt",
+   "nodes": 149
+  },
+  {
+   "id": "009",
+   "path": "chunk009.txt",
+   "nodes": 76
+  },
+  {
+   "id": "010",
+   "path": "chunk010.txt",
+   "nodes": 108
+  },
+  {
+   "id": "011",
+   "path": "chunk011.txt",
+   "nodes": 412
+  },
+  {
+   "id": "012",
+   "path": "chunk012.txt",
+   "nodes": 110
+  },
+  {
+   "id": "013",
+   "path": "chunk013.txt",
+   "nodes": 419
+  },
+  {
+   "id": "014",
+   "path": "chunk014.txt",
+   "nodes": 5
+  },
+  {
+   "id": "015",
+   "path": "chunk015.txt",
+   "nodes": 428
+  },
+  {
+   "id": "016",
+   "path": "chunk016.txt",
+   "nodes": 80
+  },
+  {
+   "id": "017",
+   "path": "chunk017.txt",
+   "nodes": 104
+  },
+  {
+   "id": "018",
+   "path": "chunk018.txt",
+   "nodes": 402
+  },
+  {
+   "id": "019",
+   "path": "chunk019.txt",
+   "nodes": 16
+  },
+  {
+   "id": "020",
+   "path": "chunk020.txt",
+   "nodes": 508
+  },
+  {
+   "id": "021",
+   "path": "chunk021.txt",
+   "nodes": 25
+  },
+  {
+   "id": "022",
+   "path": "chunk022.txt",
+   "nodes": 542
+  },
+  {
+   "id": "023",
+   "path": "chunk023.txt",
+   "nodes": 312
+  },
+  {
+   "id": "024",
+   "path": "chunk024.txt",
+   "nodes": 193
+  },
+  {
+   "id": "025",
+   "path": "chunk025.txt",
+   "nodes": 22
+  },
+  {
+   "id": "026",
+   "path": "chunk026.txt",
+   "nodes": 92
+  },
+  {
+   "id": "027",
+   "path": "chunk027.txt",
+   "nodes": 74
+  },
+  {
+   "id": "028",
+   "path": "chunk028.txt",
+   "nodes": 349
+  },
+  {
+   "id": "029",
+   "path": "chunk029.txt",
+   "nodes": 71
+  }
+ ],
+ "assets": [
+  {
+   "kind": "bg",
+   "name": "box_seat",
+   "src": "src/common/img/b/box_seat.png"
+  },
+  {
+   "kind": "bg",
+   "name": "classroom1",
+   "src": "src/common/img/b/classroom1.png"
+  },
+  {
+   "kind": "bg",
+   "name": "classroom2",
+   "src": "src/common/img/b/classroom2.png"
+  },
+  {
+   "kind": "bg",
+   "name": "classroom3",
+   "src": "src/common/img/b/classroom3.png"
+  },
+  {
+   "kind": "bg",
+   "name": "classroom_floor",
+   "src": "src/common/img/b/classroom_floor.png"
+  },
+  {
+   "kind": "bg",
+   "name": "computer_desk",
+   "src": "src/common/img/b/computer_desk.png"
+  },
+  {
+   "kind": "bg",
+   "name": "elevator",
+   "src": "src/common/img/b/elevator.png"
+  },
+  {
+   "kind": "bg",
+   "name": "heavenly_altar",
+   "src": "src/common/img/b/heavenly_altar.png"
+  },
+  {
+   "kind": "bg",
+   "name": "heavenly_altar_focus",
+   "src": "src/common/img/b/heavenly_altar_focus.png"
+  },
+  {
+   "kind": "bg",
+   "name": "hotel_corridor",
+   "src": "src/common/img/b/hotel_corridor.png"
+  },
+  {
+   "kind": "bg",
+   "name": "hotel_entrance",
+   "src": "src/common/img/b/hotel_entrance.png"
+  },
+  {
+   "kind": "bg",
+   "name": "hotel_livingroom",
+   "src": "src/common/img/b/hotel_livingroom.png"
+  },
+  {
+   "kind": "bg",
+   "name": "hotel_restaurant",
+   "src": "src/common/img/b/hotel_restaurant.png"
+  },
+  {
+   "kind": "bg",
+   "name": "kitchen",
+   "src": "src/common/img/b/kitchen.png"
+  },
+  {
+   "kind": "bg",
+   "name": "living_room1",
+   "src": "src/common/img/b/living_room1.png"
+  },
+  {
+   "kind": "bg",
+   "name": "living_room2",
+   "src": "src/common/img/b/living_room2.png"
+  },
+  {
+   "kind": "bg",
+   "name": "moon",
+   "src": "src/common/img/b/moon.png"
+  },
+  {
+   "kind": "bg",
+   "name": "moon_all",
+   "src": "src/common/img/b/moon_all.png"
+  },
+  {
+   "kind": "bg",
+   "name": "neighborhood",
+   "src": "src/common/img/b/neighborhood.png"
+  },
+  {
+   "kind": "bg",
+   "name": "neighborhood_vague",
+   "src": "src/common/img/b/neighborhood_vague.png"
+  },
+  {
+   "kind": "bg",
+   "name": "noctella_background",
+   "src": "src/common/img/b/noctella_background.png"
+  },
+  {
+   "kind": "bg",
+   "name": "pavilion",
+   "src": "src/common/img/b/pavilion.png"
+  },
+  {
+   "kind": "bg",
+   "name": "riverside_road",
+   "src": "src/common/img/b/riverside_road.png"
+  },
+  {
+   "kind": "bg",
+   "name": "riverside_road2",
+   "src": "src/common/img/b/riverside_road2.png"
+  },
+  {
+   "kind": "bg",
+   "name": "room1_4",
+   "src": "src/common/img/b/room1_4.png"
+  },
+  {
+   "kind": "bg",
+   "name": "school1",
+   "src": "src/common/img/b/school1.png"
+  },
+  {
+   "kind": "bg",
+   "name": "school2",
+   "src": "src/common/img/b/school2.png"
+  },
+  {
+   "kind": "bg",
+   "name": "shopping_mall",
+   "src": "src/common/img/b/shopping_mall.png"
+  },
+  {
+   "kind": "bg",
+   "name": "sportsroom",
+   "src": "src/common/img/b/sportsroom.png"
+  },
+  {
+   "kind": "bg",
+   "name": "stair_landing",
+   "src": "src/common/img/b/stair_landing.png"
+  },
+  {
+   "kind": "bg",
+   "name": "street1_1",
+   "src": "src/common/img/b/street1_1.png"
+  },
+  {
+   "kind": "bg",
+   "name": "street1_2",
+   "src": "src/common/img/b/street1_2.png"
+  },
+  {
+   "kind": "bg",
+   "name": "street2_1",
+   "src": "src/common/img/b/street2_1.png"
+  },
+  {
+   "kind": "bg",
+   "name": "street2_2",
+   "src": "src/common/img/b/street2_2.png"
+  },
+  {
+   "kind": "bg",
+   "name": "street3_1",
+   "src": "src/common/img/b/street3_1.png"
+  },
+  {
+   "kind": "bg",
+   "name": "tearoom",
+   "src": "src/common/img/b/tearoom.png"
+  },
+  {
+   "kind": "bg",
+   "name": "test_paper",
+   "src": "src/common/img/b/test_paper.png"
+  },
+  {
+   "kind": "bg",
+   "name": "urban_skies",
+   "src": "src/common/img/b/urban_skies.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_000",
+   "src": "src/common/img/s/000.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_001",
+   "src": "src/common/img/s/001.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_002",
+   "src": "src/common/img/s/002.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_003",
+   "src": "src/common/img/s/003.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_004",
+   "src": "src/common/img/s/004.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_005",
+   "src": "src/common/img/s/005.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_006",
+   "src": "src/common/img/s/006.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_007",
+   "src": "src/common/img/s/007.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_008",
+   "src": "src/common/img/s/008.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_009",
+   "src": "src/common/img/s/009.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_010",
+   "src": "src/common/img/s/010.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_011",
+   "src": "src/common/img/s/011.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_012",
+   "src": "src/common/img/s/012.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_013",
+   "src": "src/common/img/s/013.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_014",
+   "src": "src/common/img/s/014.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_015",
+   "src": "src/common/img/s/015.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_016",
+   "src": "src/common/img/s/016.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_017",
+   "src": "src/common/img/s/017.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_018",
+   "src": "src/common/img/s/018.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_019",
+   "src": "src/common/img/s/019.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_020",
+   "src": "src/common/img/s/020.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_021",
+   "src": "src/common/img/s/021.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_022",
+   "src": "src/common/img/s/022.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_023",
+   "src": "src/common/img/s/023.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_024",
+   "src": "src/common/img/s/024.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_025",
+   "src": "src/common/img/s/025.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_026",
+   "src": "src/common/img/s/026.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_027",
+   "src": "src/common/img/s/027.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_028",
+   "src": "src/common/img/s/028.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_029",
+   "src": "src/common/img/s/029.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_030",
+   "src": "src/common/img/s/030.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_031",
+   "src": "src/common/img/s/031.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_032",
+   "src": "src/common/img/s/032.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_033",
+   "src": "src/common/img/s/033.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_034",
+   "src": "src/common/img/s/034.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_035",
+   "src": "src/common/img/s/035.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_036",
+   "src": "src/common/img/s/036.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_037",
+   "src": "src/common/img/s/037.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_038",
+   "src": "src/common/img/s/038.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_039",
+   "src": "src/common/img/s/039.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_040",
+   "src": "src/common/img/s/040.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_041",
+   "src": "src/common/img/s/041.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_042",
+   "src": "src/common/img/s/042.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_043",
+   "src": "src/common/img/s/043.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_044",
+   "src": "src/common/img/s/044.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_045",
+   "src": "src/common/img/s/045.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_046",
+   "src": "src/common/img/s/046.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_047",
+   "src": "src/common/img/s/047.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_048",
+   "src": "src/common/img/s/048.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_049",
+   "src": "src/common/img/s/049.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_050",
+   "src": "src/common/img/s/050.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_051",
+   "src": "src/common/img/s/051.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_052",
+   "src": "src/common/img/s/052.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_053",
+   "src": "src/common/img/s/053.png"
+  },
+  {
+   "kind": "ch",
+   "name": "sp_054",
+   "src": "src/common/img/s/054.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_001",
+   "src": "src/common/img/c/cg_001.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_002",
+   "src": "src/common/img/c/cg_002.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_003",
+   "src": "src/common/img/c/cg_003.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_004",
+   "src": "src/common/img/c/cg_004.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_005",
+   "src": "src/common/img/c/cg_005.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_006",
+   "src": "src/common/img/c/cg_006.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_007",
+   "src": "src/common/img/c/cg_007.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_008",
+   "src": "src/common/img/c/cg_008.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_009",
+   "src": "src/common/img/c/cg_009.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_010",
+   "src": "src/common/img/c/cg_010.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_011",
+   "src": "src/common/img/c/cg_011.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_012",
+   "src": "src/common/img/c/cg_012.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_013",
+   "src": "src/common/img/c/cg_013.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_noctella_descend",
+   "src": "src/common/img/c/cg_noctella_descend.png"
+  },
+  {
+   "kind": "ev",
+   "name": "cg_noctella_descend_full",
+   "src": "src/common/img/c/cg_noctella_descend_full.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_001",
+   "src": "src/common/img/c/sd_001.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_002",
+   "src": "src/common/img/c/sd_002.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_003",
+   "src": "src/common/img/c/sd_003.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_004",
+   "src": "src/common/img/c/sd_004.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_005",
+   "src": "src/common/img/c/sd_005.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_006",
+   "src": "src/common/img/c/sd_006.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_007",
+   "src": "src/common/img/c/sd_007.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_008",
+   "src": "src/common/img/c/sd_008.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_009",
+   "src": "src/common/img/c/sd_009.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_010",
+   "src": "src/common/img/c/sd_010.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_011",
+   "src": "src/common/img/c/sd_011.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_012",
+   "src": "src/common/img/c/sd_012.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_013",
+   "src": "src/common/img/c/sd_013.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_014",
+   "src": "src/common/img/c/sd_014.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_015",
+   "src": "src/common/img/c/sd_015.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_016",
+   "src": "src/common/img/c/sd_016.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_017",
+   "src": "src/common/img/c/sd_017.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_018",
+   "src": "src/common/img/c/sd_018.png"
+  },
+  {
+   "kind": "sd",
+   "name": "sd_019",
+   "src": "src/common/img/c/sd_019.png"
+  }
+ ],
+ "stats": {
+  "dialogue": 5457,
+  "bg": 104,
+  "cg": 66,
+  "choice": 15,
+  "jump": 69,
+  "var": 14,
+  "end": 2,
+  "sf_skipped": 12,
+  "sf_as_var": 1,
+  "tint_skipped": 4
+ },
+ "missing_assets": [],
+ "chapters": [
+  {
+   "id": "1_1",
+   "title": "第一幕 · 月幕",
+   "start": 0
+  },
+  {
+   "id": "1_2",
+   "title": "第一幕 · 教室",
+   "start": 207
+  },
+  {
+   "id": "1_3",
+   "title": "第一幕 · 夜谈",
+   "start": 508
+  },
+  {
+   "id": "1_4",
+   "title": "第一幕 · 霁光",
+   "start": 721
+  },
+  {
+   "id": "2_1",
+   "title": "第二幕 · 校园",
+   "start": 909
+  },
+  {
+   "id": "interlude1",
+   "title": "间章 · 小涟的日常",
+   "start": 1280
+  },
+  {
+   "id": "interlude2",
+   "title": "间章 · 回到学校",
+   "start": 1427
+  },
+  {
+   "id": "2_2",
+   "title": "第二幕 · 茶餐厅",
+   "start": 1607
+  },
+  {
+   "id": "2_3",
+   "title": "第二幕 · 街道",
+   "start": 2103
+  },
+  {
+   "id": "2_4",
+   "title": "第二幕 · 雨夜",
+   "start": 2505
+  },
+  {
+   "id": "3_1",
+   "title": "第三幕 · 抉择",
+   "start": 2925
+  },
+  {
+   "id": "3_2",
+   "title": "第三幕 · 河畔",
+   "start": 3101
+  },
+  {
+   "id": "3_3",
+   "title": "第三幕 · 心意",
+   "start": 3486
+  },
+  {
+   "id": "3_4",
+   "title": "第三幕 · 天选试",
+   "start": 4025
+  },
+  {
+   "id": "end_te",
+   "title": "真结局 · 这片月幕",
+   "start": 4801,
+   "hide": 1
+  },
+  {
+   "id": "end_ne1",
+   "title": "结局 · 二人的世界",
+   "start": 4982,
+   "hide": 1
+  },
+  {
+   "id": "end_ne2",
+   "title": "结局 · 回归日常",
+   "start": 5091,
+   "hide": 1
+  },
+  {
+   "id": "after_story_noctella",
+   "title": "后日谈 · 诺提拉",
+   "start": 5158,
+   "need": 1
+  }
+ ],
+ "gallery": [
+  {
+   "n": "政客",
+   "th": "/common/img/t/g0.png",
+   "u": 108,
+   "im": [
+    108,
+    109
+   ]
+  },
+  {
+   "n": "林曦 · 教室",
+   "th": "/common/img/t/g1.png",
+   "u": 111,
+   "im": [
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120
+   ]
+  },
+  {
+   "n": "小涟",
+   "th": "/common/img/t/g2.png",
+   "u": 93,
+   "im": [
+    93,
+    94,
+    95
+   ]
+  },
+  {
+   "n": "球场",
+   "th": "/common/img/t/g3.png",
+   "u": 126,
+   "im": [
+    126
+   ]
+  },
+  {
+   "n": "林曦 · 冰激凌",
+   "th": "/common/img/t/g4.png",
+   "u": 121,
+   "im": [
+    121,
+    122,
+    123,
+    124,
+    125
+   ]
+  },
+  {
+   "n": "林曦 · 推倒",
+   "th": "/common/img/t/g5.png",
+   "u": 96,
+   "im": [
+    96,
+    97
+   ]
+  },
+  {
+   "n": "江晚晴 · 雨",
+   "th": "/common/img/t/g6.png",
+   "u": 98,
+   "im": [
+    98
+   ]
+  },
+  {
+   "n": "林曦 · 告白",
+   "th": "/common/img/t/g7.png",
+   "u": 99,
+   "im": [
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105
+   ]
+  },
+  {
+   "n": "诺提拉",
+   "th": "/common/img/t/g8.png",
+   "u": 106,
+   "im": [
+    106
+   ]
+  }
+ ]
+}

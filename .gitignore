@@ -1,0 +1,22 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+build/
+out/
+.temp_*/
+*.rpk
+
+# 测试临时目录
+tests/_esm/
+
+# Python
+__pycache__/
+*.pyc
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+*.bak
+*.log

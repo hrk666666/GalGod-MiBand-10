@@ -1,0 +1,422 @@
+<template>
+  <div class="page">
+    <!-- 顶部标题 -->
+    <div class="header">
+      <text class="header-title">{{ incomingState ? "保存进度" : "读取进度" }}</text>
+    </div>
+
+    <!-- 存档列表 -->
+    <scroll scroll-y="true" class="list">
+      <!-- 自动存档槽 -->
+      <div class="card auto-card" @click="handleAutoSlot">
+        <div if="{{ autoSaveEntry }}" class="card-content">
+          <div class="card-header-row">
+            <text class="card-title">自动存档</text>
+            <image class="status-icon" src="/common/images/succ.png"></image>
+          </div>
+          <text class="card-desc">{{ autoSaveEntry.preview }}</text>
+          <text class="card-date">{{ autoSaveEntry.date }}</text>
+        </div>
+        <div else class="card-empty">
+          <image class="empty-icon" src="/common/images/empty.png"></image>
+          <text class="empty-text">暂无自动存档</text>
+        </div>
+      </div>
+
+      <!-- 手动存档槽 -->
+      <div
+        for="{{ (index, item) in saves }}"
+        class="card"
+        @click="handleClick(index)"
+        @longpress="handleDelete(index)"
+      >
+        <div if="{{ item }}" class="card-content">
+          <div class="card-header-row">
+            <text class="card-title">{{ item.chapterName }}</text>
+          </div>
+          <text class="card-desc">{{ item.preview }}</text>
+          <text class="card-date">{{ item.date }}</text>
+        </div>
+        <div else class="card-empty">
+          <image class="empty-icon" src="/common/images/plus.png"></image>
+          <text class="empty-text">空存档位</text>
+        </div>
+      </div>
+    </scroll>
+
+    <!-- 底部返回 -->
+    <div class="footer" @click="goBack">
+      <text class="footer-text">返回</text>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="confirm-overlay" if="{{ showConfirm }}">
+      <div class="confirm-dialog">
+        <text class="confirm-title">{{ confirmTitle }}</text>
+        <text class="confirm-message">{{ confirmMessage }}</text>
+        <div class="confirm-buttons">
+          <div class="confirm-btn confirm-btn-cancel" @click="cancelConfirm">
+            <text class="confirm-btn-text">取消</text>
+          </div>
+          <div class="confirm-btn confirm-btn-ok" @click="confirmOk">
+            <text class="confirm-btn-text">确定</text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import storage from "@system.storage"
+import router from "@system.router"
+import prompt from "@system.prompt"
+import {SAVE_KEY, AUTO_SAVE_KEY} from "../../common/constants.js"
+import {vibrateShort} from "../../common/vibrate.js"
+
+export default {
+  protected: {
+    currentState: null
+  },
+
+  private: {
+    saves: [null, null, null, null, null, null, null, null],
+    incomingState: null,
+    autoSaveEntry: null,
+    showConfirm: false,
+    confirmTitle: "",
+    confirmMessage: ""
+  },
+
+  onInit() {
+    if (this.currentState) {
+      try {
+        this.incomingState =
+          typeof this.currentState === "string" ? JSON.parse(this.currentState) : this.currentState
+      } catch (e) {
+        this.incomingState = null
+      }
+    }
+    this.initData()
+  },
+
+  initData() {
+    storage.get({
+      key: SAVE_KEY,
+      success: (data) => {
+        if (data) {
+          const arr = JSON.parse(data)
+          for (let i = 0; i < 8; i++) {
+            if (arr[i]) this.saves.splice(i, 1, arr[i])
+          }
+        }
+      }
+    })
+
+    storage.get({
+      key: AUTO_SAVE_KEY,
+      success: (data) => {
+        if (data) {
+          try {
+            this.autoSaveEntry = JSON.parse(data)
+          } catch (e) {
+            this.autoSaveEntry = null
+          }
+        }
+      }
+    })
+  },
+
+  handleClick(index) {
+    vibrateShort()
+    if (this.incomingState) {
+      this.doSave(index)
+    } else if (this.saves[index]) {
+      this.doLoad(index)
+    } else {
+      prompt.showToast({message: "存档位为空"})
+    }
+  },
+
+  handleAutoSlot() {
+    vibrateShort()
+    if (this.incomingState) {
+      prompt.showToast({message: "自动存档不可手动覆盖"})
+    } else if (this.autoSaveEntry) {
+      this.doLoadAuto()
+    } else {
+      prompt.showToast({message: "暂无自动存档"})
+    }
+  },
+
+  doSave(index) {
+    if (!this.incomingState) return
+
+    const rawText = this.incomingState.fullText
+    let previewContent = "..."
+    if (rawText) {
+      previewContent = rawText.length > 10 ? rawText.substring(0, 10) + "..." : rawText
+    }
+
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+    const hour = now.getHours().toString().padStart(2, "0")
+    const min = now.getMinutes().toString().padStart(2, "0")
+    const dateStr = `${month}/${day} ${hour}:${min}`
+
+    const entry = {
+      date: dateStr,
+      chapterName: this.incomingState.chapterName,
+      preview: previewContent,
+      gameState: this.incomingState
+    }
+
+    this.saves.splice(index, 1, entry)
+    storage.set({
+      key: SAVE_KEY,
+      value: JSON.stringify(this.saves),
+      success: () => prompt.showToast({message: "保存成功"})
+    })
+  },
+
+  doLoad(index) {
+    this.showConfirmDialog("读取进度", "将覆盖自动存档和当前进度，确定继续？", () => {
+      this.$app.$def.globalGameState = this.saves[index].gameState
+      this.$app.$def.globalGameState._fromLoad = true
+      router.replace({ uri: "pages/game" })
+    })
+  },
+
+  doLoadAuto() {
+    this.showConfirmDialog("读取进度", "将覆盖当前进度，确定继续？", () => {
+      this.$app.$def.globalGameState = this.autoSaveEntry.gameState
+      router.replace({ uri: "pages/game" })
+    })
+  },
+
+  handleDelete(index) {
+    vibrateShort()
+    if (!this.saves[index]) return
+    this.showConfirmDialog("删除存档", "确定要删除此存档吗？", () => {
+      this.saves.splice(index, 1, null)
+      storage.set({key: SAVE_KEY, value: JSON.stringify(this.saves)})
+      prompt.showToast({message: "删除成功"})
+    })
+  },
+
+  showConfirmDialog(title, message, action) {
+    this.confirmTitle = title
+    this.confirmMessage = message
+    this.confirmAction = action
+    this.showConfirm = true
+  },
+
+  cancelConfirm() {
+    this.showConfirm = false
+    this.confirmAction = null
+  },
+
+  confirmOk() {
+    this.showConfirm = false
+    const action = this.confirmAction
+    this.confirmAction = null
+    if (action) action()
+  },
+
+  goBack() {
+    vibrateShort()
+    router.back()
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  background-color: #000000;
+  width: 100%;
+  height: 100%;
+}
+
+.header {
+  position: absolute;
+  top: 20px;
+  width: 100%;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.list {
+  position: absolute;
+  top: 76px;
+  left: 12px;
+  right: 12px;
+  bottom: 72px;
+  flex-direction: column;
+}
+
+.card {
+  width: 100%;
+  min-height: 64px;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  background-color: #262626;
+  border-radius: 20px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auto-card {
+  background-color: rgba(13, 110, 255, 0.12);
+  border-width: 1px;
+  border-color: rgba(13, 110, 255, 0.4);
+}
+
+.card-content {
+  flex-direction: column;
+  width: 100%;
+}
+
+.card-header-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.card-title {
+  font-size: 19px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.status-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.card-desc {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  lines: 2;
+  text-overflow: ellipsis;
+  line-height: 20px;
+  margin-bottom: 2px;
+}
+
+.card-date {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.card-empty {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+.empty-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.empty-text {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.footer {
+  position: absolute;
+  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  height: 48px;
+  background-color: #262626;
+  border-radius: 24px;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-text {
+  font-size: 21px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.confirm-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.confirm-dialog {
+  width: 88%;
+  max-width: 300px;
+  background-color: #262626;
+  border-radius: 20px;
+  padding: 20px 16px;
+  align-items: center;
+}
+
+.confirm-title {
+  width: 100%;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  width: 100%;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  lines: -1;
+  line-height: 22px;
+  margin-bottom: 18px;
+}
+
+.confirm-buttons {
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.confirm-btn {
+  flex: 1;
+  height: 42px;
+  margin: 0 5px;
+  border-radius: 21px;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-btn-cancel {
+  background-color: #3a3a3a;
+}
+
+.confirm-btn-ok {
+  background-color: #0d6eff;
+}
+
+.confirm-btn-text {
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffffff;
+}
+</style>
