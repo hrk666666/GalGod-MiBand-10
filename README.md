@@ -12,7 +12,7 @@
 对话      5,457 句（全量，非删减）
 美术      背景 37 / 立绘 53 / 事件 CG 15 / SD 图 19
 分支      15 个选择点，13 题答题区，真结局 + Bad End
-页面      5 个：主页 / 正文 / 存档 / 设置 / 关于
+页面      6 个：主页 / 正文 / 存档 / 后日谈 / 设置 / 关于
 协议      代码 GPL-3.0（见 LICENSE）；剧本与美术资源不在授权范围内（见 NOTICE.md）
 ```
 
@@ -165,7 +165,7 @@ tools/simulate_galgod.py   真结局 · 这片月幕  → 全剧终  (true=4 bad
                            Bad End 路线     → Bad End (true=0 bad=1 finish=0)
                            ✓ Bad End 可达  ✓ 真结局可达  ✓ 无悬空跳转
 
-tests/run-tests.mjs        通过 17 / 17
+tests/run-tests.mjs        通过 20 / 20
 ```
 
 ---

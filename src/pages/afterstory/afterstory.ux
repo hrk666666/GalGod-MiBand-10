@@ -1,0 +1,250 @@
+<template>
+  <div class="page" @swipe="swipeBack">
+    <!-- 顶部标题 -->
+    <div class="header">
+      <text class="header-title">后日谈</text>
+    </div>
+
+    <!-- 后日谈列表 -->
+    <scroll scroll-y="true" class="list">
+      <div
+        for="{{ (index, item) in stories }}"
+        class="card {{ item.unlocked ? '' : 'card-locked' }}"
+        @click="handleClick(index)"
+      >
+        <div class="card-content">
+          <div class="card-header-row">
+            <text class="card-title">{{ item.name }}</text>
+            <image
+              if="{{ item.unlocked }}"
+              class="status-icon"
+              src="/common/images/succ.png"
+            ></image>
+            <image
+              else
+              class="status-icon"
+              src="/common/images/empty.png"
+            ></image>
+          </div>
+          <text class="card-desc">{{ item.unlocked ? item.desc : item.hint }}</text>
+          <text class="card-date">{{ item.unlocked ? "可阅读" : "未解锁" }}</text>
+        </div>
+      </div>
+
+      <!-- 无后日谈占位 -->
+      <div if="{{ stories.length === 0 }}" class="card">
+        <div class="card-empty">
+          <image class="empty-icon" src="/common/images/empty.png"></image>
+          <text class="empty-text">暂无后日谈</text>
+        </div>
+      </div>
+    </scroll>
+
+    <!-- 底部返回 -->
+    <div class="footer" @click="goBack">
+      <text class="footer-text">返回</text>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import storage from "@system.storage"
+import prompt from "@system.prompt"
+import {CLEARS_KEY, AFTER_STORY} from "../../common/constants.js"
+import {vibrateShort} from "../../common/vibrate.js"
+
+export default {
+  private: {
+    stories: []
+  },
+
+  onInit() {
+    this.loadStories()
+  },
+
+  onShow() {
+    this.loadStories()
+  },
+
+  loadStories() {
+    storage.get({
+      key: CLEARS_KEY,
+      success: (data) => {
+        let clears = []
+        try {
+          clears = data ? JSON.parse(data) : []
+        } catch (e) {
+          clears = []
+        }
+        const unlocked = clears.indexOf("全剧终") !== -1
+        this.stories = [
+          {
+            name: AFTER_STORY.name,
+            label: AFTER_STORY.label,
+            unlocked,
+            desc: "真结局之后的延续剧情",
+            hint: "达成真结局「这片月幕」后解锁"
+          }
+        ]
+      },
+      fail: () => {
+        this.stories = [
+          {
+            name: AFTER_STORY.name,
+            label: AFTER_STORY.label,
+            unlocked: false,
+            desc: "真结局之后的延续剧情",
+            hint: "达成真结局「这片月幕」后解锁"
+          }
+        ]
+      }
+    })
+  },
+
+  handleClick(index) {
+    vibrateShort()
+    const item = this.stories[index]
+    if (!item) return
+    if (!item.unlocked) {
+      prompt.showToast({message: "未解锁：先达成真结局「这片月幕」"})
+      return
+    }
+    this.$app.$def.globalGameState = {
+      _fromAfterStory: { label: item.label }
+    }
+    router.replace({uri: "pages/game"})
+  },
+
+  swipeBack() {
+    vibrateShort()
+    router.back()
+  },
+
+  goBack() {
+    vibrateShort()
+    router.back()
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  background-color: #000000;
+  width: 100%;
+  height: 100%;
+}
+
+.header {
+  position: absolute;
+  top: 20px;
+  width: 100%;
+  height: 44px;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.list {
+  position: absolute;
+  top: 76px;
+  left: 12px;
+  right: 12px;
+  bottom: 72px;
+  flex-direction: column;
+}
+
+.card {
+  width: 100%;
+  min-height: 64px;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  background-color: #262626;
+  border-radius: 20px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card-locked {
+  opacity: 0.5;
+}
+
+.card-content {
+  flex-direction: column;
+  width: 100%;
+}
+
+.card-header-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.card-title {
+  font-size: 19px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.status-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.card-desc {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  lines: 2;
+  text-overflow: ellipsis;
+  line-height: 20px;
+  margin-bottom: 2px;
+}
+
+.card-date {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.card-empty {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+.empty-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.empty-text {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.footer {
+  position: absolute;
+  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  height: 48px;
+  background-color: #262626;
+  border-radius: 24px;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-text {
+  font-size: 21px;
+  font-weight: bold;
+  color: #ffffff;
+}
+</style>

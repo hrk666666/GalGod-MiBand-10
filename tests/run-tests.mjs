@@ -417,6 +417,50 @@ await test("resourceManager 预加载清单", () => {
   ], "预加载清单（音频不预加载）")
 })
 
+await test("cg* 事件图归入 ev/ 目录（回归：曾误判为不存在的 ev 资源）", () => {
+  const rm = new ResourceManager({ base: "/common", dirs: { bg: "bg", sd: "sd", ev: "ev", ch: "ch", audio: "audio" } })
+  const refs = rm.scanScript([
+    [5, "cg_001"],
+    [5, "cg_noctella_descend"],
+    [5, "sd_001"]
+  ])
+  eq(refs.ev.size, 2, "cg* 应归入 ev")
+  eq(refs.sd.size, 1, "sd* 应归入 sd")
+  const list = rm.preloadList([[5, "cg_001"]])
+  deepEq(list, ["/common/ev/cg_001.jpg"], "cg* → /common/ev/<名>.jpg")
+})
+
+await test("资源 URI 约定：sd→png、ev→jpg、bg→jpg、ch→png", () => {
+  const rm = new ResourceManager({ base: "/common", dirs: { bg: "bg", sd: "sd", ev: "ev", ch: "ch", audio: "audio" } })
+  eq(rm.uri("sd", "sd_001"), "/common/sd/sd_001.png", "SD 图必须落 sd/ 且为 PNG")
+  eq(rm.uri("ev", "cg_001"), "/common/ev/cg_001.jpg", "事件 CG 必须落 ev/ 且为 JPEG")
+  eq(rm.uri("bg", "moon"), "/common/bg/moon.jpg", "背景 JPEG")
+  eq(rm.uri("ch", "sp_000"), "/common/ch/sp_000.png", "立绘 PNG（保留透明通道）")
+})
+
+await test("剧本引用的全部资源在磁盘上存在", async () => {
+  const fsmod = await import("node:fs")
+  const pathmod = await import("node:path")
+  const SCN_DIR = pathmod.join(ROOT, "src", "common", "scn")
+  const COMMON = pathmod.join(ROOT, "src", "common")
+  const rm = new ResourceManager({ base: "/common", dirs: { bg: "bg", sd: "sd", ev: "ev", ch: "ch", audio: "audio" } })
+
+  const all = []
+  for (const f of fsmod.readdirSync(SCN_DIR).filter((x) => x.endsWith(".txt")).sort()) {
+    const data = JSON.parse(fsmod.readFileSync(pathmod.join(SCN_DIR, f), "utf-8"))
+    all.push(...rm.preloadList(data))
+  }
+  const missing = []
+  for (const uri of new Set(all)) {
+    // "/common/bg/moon.jpg" -> src/common/bg/moon.jpg
+    const rel = uri.replace(/^\/common\//, "")
+    const abs = pathmod.join(COMMON, rel)
+    if (!fsmod.existsSync(abs)) missing.push(uri)
+  }
+  eq(missing.length, 0, "缺失资源: " + missing.slice(0, 10).join(", "))
+  assert(all.length > 0, "应至少解析出若干资源引用")
+})
+
 // =====================================================================
 console.log("\n========== 结果 ==========")
 console.log(`通过 ${passed} / ${passed + failed}`)

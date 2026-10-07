@@ -36,11 +36,11 @@
       src="{{ currentEVSrc }}"
     ></image>
 
-    <!-- SD 事件图 -->
+    <!-- SD 事件图（引擎按前缀路由：sd* → /common/sd/<名>.png） -->
     <image
       class="sd-image"
       if="{{ currentSD }}"
-      src="{{ '/common/ev/' + currentSD + '.png' }}"
+      src="{{ '/common/sd/' + currentSD + '.png' }}"
       style="left: {{ sdLeft }}px; top: {{ sdTop }}px"
       ontouchstart="sdTouchStart"
       ontouchmove="sdTouchMove"
@@ -451,7 +451,10 @@ export default {
   /** EV 资源扩展名：ev* 为 .jpg，其余（sd/ef/アイテム/画面_*）为 .png */
   resolveEVSrc(name) {
     if (!name) return ""
-    return "/common/ev/" + name + (name.startsWith("ev") ? ".jpg" : ".png")
+    // 事件 CG 统一落在 /common/ev/ 目录，且一律为 JPEG：
+    //   ev* / cg*  → /common/ev/<名>.jpg
+    // SD 图不走这里（引擎把 sd* 放进 this.sd，由独立图层渲染到 /common/sd/<名>.png）
+    return "/common/ev/" + name + ".jpg"
   },
 
   startTypeWriter() {

@@ -1,7 +1,7 @@
 {
   "id": "galgod-band",
   "title": "想成为Galgame领域大神！！！",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "engine": {
     "format": "vn-1.1",
     "minRuntime": "1.0"

@@ -53,10 +53,12 @@ export class ResourceManager {
             }
           }
           break
-        case 5: // 事件 CG
+        case 5: // 事件 CG / 立绘差分
           if (node[1]) {
+            // sd* → sd/ 目录（立绘差分，PNG）
+            // ev* / cg* → ev/ 目录（事件 CG，JPEG）
             if (node[1].startsWith("sd")) refs.sd.add(node[1])
-            else if (node[1].startsWith("ev")) refs.ev.add(node[1])
+            else refs.ev.add(node[1])
           }
           break
         case 7: // 立绘指令
