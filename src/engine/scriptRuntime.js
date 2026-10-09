@@ -28,6 +28,9 @@ export const SCN_TYPE = {
 
 export const CH_SLOTS = ["left", "center", "right"]
 
+/** 单字母快捷槽位（存量剧本大量用 "c" 表示中间位置）→ 标准槽位 */
+const SLOT_ALIAS = { c: "center", l: "left", r: "right" }
+
 /**
  * 真结局节点目标 → 通关标记线名。
  *
@@ -157,6 +160,8 @@ export class ScriptRuntime {
       // 跨场景：CG（事件图）属于原场景，不残留到新场景；需要时场景剧本会重新声明
       this.ev = ""
       this.sd = ""
+      // 跨场景：立绘同样不残留（剧本从不发 fadeout，旧实现会把立绘带进新场景越积越多）
+      this.characters = { left: null, center: null, right: null }
     }
     this._emit()
     this._step()
@@ -501,9 +506,13 @@ export class ScriptRuntime {
    * 立绘指令。兼容两种格式：
    *  - v1.1 新格式：[角色id_表情, left|center|right, fadein|fadeout|change]
    *  - 存量 KRKR 格式（FreeMote 转换产物）：[角色名, 出|中|左|右|顔|百分比|消, 表情号, 服装]
-   * 存量剧本立绘资源未随包提供（旧版 TODO），引擎只维护槽位状态，UI 层无图时自动隐藏。
+   * 槽位额外兼容单字母写法（"c"/"l"/"r"，存量剧本大量使用）；"消" 无位置信息，视为全部立绘退场。
    */
   _applyCharacter(charKey, slot = "center", action = "change", extra) {
+    // 单字母快捷写法 → 标准槽位
+    const alias = SLOT_ALIAS[slot]
+    if (alias) slot = alias
+
     // v1.1 新格式：位置就是标准槽位
     if (CH_SLOTS.includes(slot)) {
       if (action === "fadeout") {
@@ -513,13 +522,14 @@ export class ScriptRuntime {
       }
       return
     }
-    // 存量 KRKR 格式：位置是中文/百分比
-    const pos = legacySlot(slot)
-    if (pos === null) return // 无法识别的位置，忽略
+
+    // 存量 KRKR 格式：位置是中文/百分比；"消" 无位置信息 → 清空全部槽位
     if (slot === "消" || action === "fadeout") {
-      this.characters[pos] = null
+      this.characters = { left: null, center: null, right: null }
       return
     }
+    const pos = legacySlot(slot)
+    if (pos === null) return // 无法识别的位置，忽略
     const key = extra ? `${charKey}_${extra}` : charKey
     this.characters[pos] = { key, action: "change" }
   }
@@ -584,6 +594,8 @@ export class ScriptRuntime {
           (n) => n[0] === SCN_TYPE.LABEL && n[1] === lab
         )
         if (this.lineIndex === -1) this.lineIndex = 0
+        // 跨场景：立绘不残留（与 load() 非存档分支一致）
+        this.characters = { left: null, center: null, right: null }
         this._step()
       } catch (e) {
         this._toast("跳转失败: " + label)

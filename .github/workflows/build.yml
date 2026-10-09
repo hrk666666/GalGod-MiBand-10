@@ -25,7 +25,7 @@ jobs:
         run: npm test
 
       - name: Validate content package
-        run: python3 tools/validate_qlwh.py
+        run: python3 tools/validate_galgod.py .
 
       - name: Build release (RPK, JSC bytecode)
         run: npm run release
@@ -40,7 +40,7 @@ jobs:
       - name: Upload RPK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qlwh-senren-banka-rpk
+          name: galgod-miband-10-rpk
           path: |
             dist/
             build/

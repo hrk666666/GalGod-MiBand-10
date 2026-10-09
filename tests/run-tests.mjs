@@ -462,6 +462,134 @@ await test("剧本引用的全部资源在磁盘上存在", async () => {
 })
 
 // =====================================================================
+console.log("== 8. 立绘槽位修复回归（1.1.1）==")
+
+await test("单字母别名槽位 c/l/r 归一化为标准槽位", async () => {
+  const { adapter, vars, config } = makeEnv({
+    scripts: {
+      s1: [
+        [3, "A", "中", [["sp_c", "c", "change"]]],
+        [3, "A", "左", [["sp_l", "l", "change"]]],
+        [3, "A", "右", [["sp_r", "r", "change"]]]
+      ]
+    }
+  })
+  const rt = new ScriptRuntime({ adapter, vars, config: config, onState: () => {} })
+  await rt.load("s1")
+  deepEq(rt.characters, { left: null, center: { key: "sp_c", action: "change" }, right: null }, "c → center")
+  rt.markTextComplete(); rt.advance()
+  deepEq(rt.characters.left, { key: "sp_l", action: "change" }, "l → left")
+  rt.markTextComplete(); rt.advance()
+  deepEq(rt.characters.right, { key: "sp_r", action: "change" }, "r → right")
+})
+
+await test("跨场景 load() 非存档分支重置立绘", async () => {
+  const cfg = { scenarios: { common: [{ id: "s1", path: "s1.ks.txt" }, { id: "s2", path: "s2.ks.txt" }] }, routes: {} }
+  const scripts = {
+    s1: [[3, "A", "有立绘", [["hero", "center", "change"]]]],
+    s2: [[3, "B", "新场景"]] // s2 不声明立绘
+  }
+  const { adapter, vars, config } = makeEnv({ config: cfg, scripts })
+  const rt = new ScriptRuntime({ adapter, vars, config: cfg, onState: () => {} })
+  await rt.load("s1")
+  deepEq(rt.characters.center, { key: "hero", action: "change" }, "s1 立绘已设置")
+  rt.markTextComplete(); rt.advance() // 场景结束 → 自动进 s2
+  await new Promise((r) => setTimeout(r, 0))
+  eq(rt.scnId, "s2", "推进到 s2")
+  deepEq(rt.characters, { left: null, center: null, right: null }, "跨场景后立绘清空")
+})
+
+await test("读档恢复保留存档立绘", async () => {
+  const { adapter, vars, config } = makeEnv({
+    scripts: { s1: [[3, "A", "句", [["hero", "left", "fadein"]]]] }
+  })
+  const rt = new ScriptRuntime({ adapter, vars, config: config, onState: () => {} })
+  await rt.load("s1")
+  rt.markTextComplete()
+  const saved = rt.save()
+  const rt2 = new ScriptRuntime({ adapter, vars, config: config, onState: () => {} })
+  await rt2.restore(saved)
+  deepEq(rt2.characters, { left: { key: "hero", action: "fadein" }, center: null, right: null }, "读档保留立绘")
+})
+
+await test("legacy “消” 清空全部槽位", async () => {
+  const { adapter, vars, config } = makeEnv({
+    scripts: {
+      s1: [
+        [7, "hero", "left", "fadein"],
+        [3, "A", "句1"],
+        [7, "hero2", "right", "fadein"],
+        [7, "hero", "消"]
+      ]
+    }
+  })
+  const rt = new ScriptRuntime({ adapter, vars, config: config, onState: () => {} })
+  await rt.load("s1") // 停在对话行，[7] 指令已自动执行 fadein
+  deepEq(rt.characters.left, { key: "hero", action: "fadein" }, "fadein 后左槽已设置")
+  // 推进：完成对话 → 自动执行 hero2 fadein 与 “消”
+  rt.markTextComplete(); rt.advance()
+  deepEq(rt.characters, { left: null, center: null, right: null }, "“消”后全部清空")
+})
+
+await test("跨场景跳转（scnId@label）重置立绘", async () => {
+  const cfg = { scenarios: { common: [{ id: "s1", path: "s1.ks.txt" }, { id: "s2", path: "s2.ks.txt" }] }, routes: {} }
+  const scripts = {
+    s1: [
+      [3, "A", "句", [["hero", "center", "change"]]],
+      [4, [["去 s2", "s2@dst", ""]]]
+    ],
+    s2: [[0, "dst"], [3, "B", "s2 句"]]
+  }
+  const { adapter, vars, config } = makeEnv({ config: cfg, scripts })
+  const rt = new ScriptRuntime({ adapter, vars, config: cfg, onState: () => {} })
+  await rt.load("s1")
+  deepEq(rt.characters.center, { key: "hero", action: "change" }, "s1 立绘已设置")
+  rt.markTextComplete(); rt.advance()
+  rt.choose(0)
+  await new Promise((r) => setTimeout(r, 0))
+  eq(rt.scnId, "s2", "跨场景跳转成功")
+  deepEq(rt.characters, { left: null, center: null, right: null }, "跳转后立绘清空")
+})
+
+await test("真实剧本 chunk009→chunk010 不再累积三槽", async () => {
+  const fsmod = await import("node:fs")
+  const pathmod = await import("node:path")
+  const SCN_DIR = pathmod.join(ROOT, "src", "common", "scn")
+  const cfg = { scenarios: { main: [{ id: "009", path: "chunk009.txt" }, { id: "010", path: "chunk010.txt" }] }, routes: {} }
+  const scripts = {}
+  for (const id of ["009", "010"]) {
+    scripts[id] = JSON.parse(fsmod.readFileSync(pathmod.join(SCN_DIR, `chunk${id}.txt`), "utf-8"))
+  }
+  const { adapter, vars, config } = makeEnv({ config: cfg, scripts })
+  const rt = new ScriptRuntime({ adapter, vars, config: cfg, onState: () => {} })
+  await rt.load("009")
+  // 步进完 chunk009 的全部非交互节点（对话等玩家点击）
+  let guard = 0
+  while (rt.lineIndex < rt.scriptData.length && !rt.showOptions && !rt.ended && guard++ < 5000) {
+    if (!rt.isTextComplete) rt.markTextComplete()
+    rt.advance()
+  }
+  // chunk009 期间应有立绘被设置（如 left/right）
+  const endOf009 = JSON.parse(JSON.stringify(rt.characters))
+  const anySet = Object.keys(endOf009).some((k) => endOf009[k] !== null)
+  assert(anySet, "chunk009 应设置过立绘")
+  // 手动推进到 chunk010（load 非存档分支）
+  await rt.load("010")
+  deepEq(rt.characters, { left: null, center: null, right: null }, "进入 chunk010 立绘已被清空")
+  // chunk010 中 "c" 槽位立绘应能正常显示
+  let foundCenter = false
+  for (const node of rt.scriptData) {
+    if (node[0] === 3 && Array.isArray(node[3])) {
+      for (const item of node[3]) {
+        if (Array.isArray(item) && item[1] === "c") { foundCenter = true; break }
+      }
+    }
+    if (foundCenter) break
+  }
+  assert(foundCenter, "chunk010 含 c 槽位指令（供别名归一化生效验证）")
+})
+
+// =====================================================================
 console.log("\n========== 结果 ==========")
 console.log(`通过 ${passed} / ${passed + failed}`)
 if (failed > 0) {

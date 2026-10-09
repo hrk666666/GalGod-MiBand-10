@@ -346,6 +346,8 @@ def convert(src_root, dst_root):
                 if cname is None:
                     continue
                 pos = c.get("s") or "center"
+                # 存量源数据用单字母 "c"/"l"/"r" 表示槽位，归一化为引擎标准槽位
+                pos = {"c": "center", "l": "left", "r": "right"}.get(pos, pos)
                 charlist.append([cname, pos, "change"])
             # 对话
             speaker = n.get("n") or ""

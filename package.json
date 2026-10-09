@@ -1,6 +1,6 @@
 {
   "name": "galgod-miband-10",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "《想成为Galgame领域大神！！！》小米手环移植版 —— 内容来自 mcpotato1123/galgod-band，引擎与 UI 采用 Sanoba-Witch-MiBand-10 的 VnEngine",
   "author": "hrk_",
   "license": "GPL-3.0",

@@ -1,5 +1,17 @@
 # 更新日志
 
+## 1.1.1（2026-10-09）
+
+### 修复
+- **立绘出现后不消失、三个槽位堆叠**：根因有三，均已修复——
+  - 剧本槽位 `"c"` 不被识别：存量剧本 543 处用 `"c"` 表示中间位置，引擎只认 `left|center|right`，指令被静默忽略。运行时 `_applyCharacter` 现支持单字母别名（`c/l/r` → `center/left/right`），转换器 `convert_galgod.py` 同步做槽位归一化，防止重新转换时再次产生。
+  - 跨场景立绘不清场：`load()` 非存档分支与 `_jumpToScenarioLabel()` 原先只清 CG/背景，`characters` 原样带入下一场景，三槽越积越满。现与 CG 一致在场景边界重置。
+  - legacy "消" 分支死代码：`if (slot === "消" ...)` 位于 `pos === null return` 之后永远执行不到，且 `legacySlot("消")` 恒为 null。已改为在位置解析前处理，`"消"` / `fadeout` 清空全部槽位。
+
+### 其他
+- CI 工作流修正：`validate_qlwh.py`（其他项目遗留）改为本仓库的 `python3 tools/validate_galgod.py .`，产物名同步改为 `galgod-miband-10-rpk`。
+- 版本号升至 1.1.1（manifest versionCode 3）。
+
 ## 1.1.0（2026-10-07）
 
 ### 新增
