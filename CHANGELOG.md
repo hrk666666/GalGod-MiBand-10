@@ -1,5 +1,13 @@
 # 更新日志
 
+## 1.1.2（2026-10-10）
+
+### 修复
+- **进游戏页必然重启（手环 9 固件）**：按上游仓库修改建议，完全移除 `system.brightness` 相关功能——`game.ux` 删除 brightness 模块引用、`captureOriginalBrightness` / `restoreBrightness` / `applyKeepScreenOn` 三个方法及生命周期调用；`settings.ux` 删除「屏幕常亮」「低亮度模式」两个开关；`manifest.json` 移除 `system.brightness` 权限声明。手环 9 固件不存在该模块，任何调用都可能触发设备重启。
+
+### 其他
+- 版本号升至 1.1.2（manifest versionCode 4）。
+
 ## 1.1.1（2026-10-09）
 
 ### 修复

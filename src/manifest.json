@@ -1,8 +1,8 @@
 {
   "package": "com.hrk.galgod.band",
   "name": "GalGod",
-  "versionName": "1.1.1",
-  "versionCode": 3,
+  "versionName": "1.1.2",
+  "versionCode": 4,
   "minPlatformVersion": 1000,
   "icon": "/common/icon.png",
   "deviceTypeList": [
@@ -23,9 +23,6 @@
     },
     {
       "name": "system.audio"
-    },
-    {
-      "name": "system.brightness"
     },
     {
       "name": "system.vibrator"
