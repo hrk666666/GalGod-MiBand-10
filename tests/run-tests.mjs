@@ -576,17 +576,142 @@ await test("真实剧本 chunk009→chunk010 不再累积三槽", async () => {
   // 手动推进到 chunk010（load 非存档分支）
   await rt.load("010")
   deepEq(rt.characters, { left: null, center: null, right: null }, "进入 chunk010 立绘已被清空")
-  // chunk010 中 "c" 槽位立绘应能正常显示
+  // chunk010 中槽位立绘数据应存在（v1.1.3 起转换器已归一化为 center）
   let foundCenter = false
   for (const node of rt.scriptData) {
     if (node[0] === 3 && Array.isArray(node[3])) {
       for (const item of node[3]) {
-        if (Array.isArray(item) && item[1] === "c") { foundCenter = true; break }
+        if (Array.isArray(item) && item[1] === "center") { foundCenter = true; break }
       }
     }
     if (foundCenter) break
   }
-  assert(foundCenter, "chunk010 含 c 槽位指令（供别名归一化生效验证）")
+  assert(foundCenter, "chunk010 含槽位立绘指令（center）")
+})
+
+// =====================================================================
+// 跨块跳转回归（转换器 scnId@label 改写，v1.1.3）
+// 真实引擎按块加载，跨块目标必须写成 scnId@label 才能跳转。
+// =====================================================================
+
+const tick = () => new Promise((r) => setTimeout(r, 0))
+
+async function loadRealScripts(ids) {
+  const fsmod = await import("node:fs")
+  const pathmod = await import("node:path")
+  const SCN_DIR = pathmod.join(ROOT, "src", "common", "scn")
+  const scripts = {}
+  for (const id of ids)
+    scripts[id] = JSON.parse(fsmod.readFileSync(pathmod.join(SCN_DIR, `chunk${id}.txt`), "utf-8"))
+  return scripts
+}
+
+/** 用真实剧本完整通关：选项按 table[序号] 选择。返回 {rt, chapters, scnIds, toasts} */
+async function playThrough(cfg, scripts, table) {
+  const { adapter, vars, config } = makeEnv({ config: cfg, scripts })
+  const rt = new ScriptRuntime({ adapter, vars, config: cfg, onState: () => {} })
+  const toasts = []
+  rt._toast = (m) => toasts.push(m)
+  await rt.load("001")
+  const chapters = []
+  const scnIds = []
+  let optIdx = 0
+  let guard = 0
+  while (!rt.ended && guard++ < 300000) {
+    if (rt.chapterName && chapters[chapters.length - 1] !== rt.chapterName) chapters.push(rt.chapterName)
+    if (scnIds[scnIds.length - 1] !== rt.scnId) scnIds.push(rt.scnId)
+    if (rt.showOptions) {
+      const pick = table[optIdx]
+      rt.choose(pick === undefined ? 0 : Math.min(pick, rt.options.length - 1))
+      optIdx++
+      await tick()
+      continue
+    }
+    if (!rt.isTextComplete) rt.markTextComplete()
+    rt.advance()
+    await tick()
+  }
+  // 结束前的异步跨块加载可能未及记录，补记最终场景
+  if (scnIds[scnIds.length - 1] !== rt.scnId) scnIds.push(rt.scnId)
+  return { rt, chapters, scnIds, toasts }
+}
+
+// 答题区选择表（对照 simulate_galgod.py 的 ROUTE）：#0-3 收集 true_end_flag，#5-12 答题拿分
+const COLLECT = { 0: 2, 1: 4, 2: 1, 3: 0 }
+const KEY = { 5: 1, 6: 1, 7: 2, 9: 3, 10: 1, 11: 0, 12: 1 }
+const PASS_TABLE = Object.assign({}, COLLECT, KEY)
+
+await test("023 最终三线分叉选项跨块跳转（真实剧本）", async () => {
+  const scripts = await loadRealScripts(["023", "024", "025", "027"])
+  const cfg = {
+    scenarios: { main: [
+      { id: "023", path: "chunk023.txt" }, { id: "024", path: "chunk024.txt" },
+      { id: "025", path: "chunk025.txt" }, { id: "027", path: "chunk027.txt" }
+    ] }, routes: {}
+  }
+  const cases = [
+    { label: "放手 → chunk027", expect: "027", tag: "L5092", pick: 0, setFlags: null },
+    { label: "诞生 → chunk025", expect: "025", tag: "L4983", pick: 1, setFlags: null },
+    { label: "交给小涟选择（需4分）→ chunk024", expect: "024", tag: "L4802", pick: 2, setFlags: { "true_end_flag": 4 } }
+  ]
+  for (const c of cases) {
+    const { adapter, vars, config } = makeEnv({ config: cfg, scripts })
+    const rt = new ScriptRuntime({ adapter, vars, config: cfg, onState: () => {} })
+    const toasts = []
+    rt._toast = (m) => toasts.push(m)
+    if (c.setFlags) for (const [k, v] of Object.entries(c.setFlags)) vars.set(k, v)
+    await rt.load("023")
+    let guard = 0
+    while (!rt.showOptions && !rt.ended && guard++ < 3000) {
+      if (!rt.isTextComplete) rt.markTextComplete()
+      rt.advance()
+    }
+    assert(rt.options.length >= c.pick + 1, c.label + "：选项应可见（" + rt.options.length + "）")
+    rt.choose(c.pick)
+    await tick()
+    eq(rt.scnId, c.expect, c.label + " → 场景 " + c.expect)
+    // 引擎跳转后已执行标签节点（无内容自动跳过），停在标签后第一行
+    const prev = rt.scriptData[rt.lineIndex - 1]
+    assert(prev && prev[0] === 0 && prev[1] === c.tag, c.label + "：应落在标签 " + c.tag + " 之后（实际上一行 " + JSON.stringify(prev) + "）")
+    eq(toasts.some((m) => m.indexOf("未找到标签") !== -1), false, c.label + "：无「未找到标签」toast")
+  }
+})
+
+await test("真实全剧本通关：真结局线不串线", async () => {
+  const scripts = await loadRealScripts(Array.from({ length: 29 }, (_, i) => String(i + 1).padStart(3, "0")))
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "src/common/game.txt"), "utf-8"))
+  const table = Object.assign({}, PASS_TABLE, { 13: 2 })  // 最终选「交给小涟选择」
+  const { rt, scnIds, toasts } = await playThrough(cfg, scripts, table)
+  assert(rt.ended, "游戏应正常结束")
+  eq(toasts.some((m) => m.indexOf("未找到标签") !== -1), false, "全程无「未找到标签」")
+  assert(scnIds.includes("024"), "应进入真结局线场景 024")
+  assert(scnIds.includes("028") && scnIds.includes("029"), "应进入共用结局场景 028/029")
+  assert(!scnIds.includes("025"), "不应串线到二人世界场景 025")
+  assert(!scnIds.includes("027"), "不应串线到回归日常场景 027")
+})
+
+await test("真实全剧本通关：二人的世界线不串线", async () => {
+  const scripts = await loadRealScripts(Array.from({ length: 29 }, (_, i) => String(i + 1).padStart(3, "0")))
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "src/common/game.txt"), "utf-8"))
+  const table = Object.assign({}, PASS_TABLE, { 13: 1 })  // 最终选「要让小涟诞生」
+  const { rt, scnIds, toasts } = await playThrough(cfg, scripts, table)
+  assert(rt.ended, "游戏应正常结束")
+  eq(toasts.some((m) => m.indexOf("未找到标签") !== -1), false, "全程无「未找到标签」")
+  assert(scnIds.includes("025"), "应进入二人世界线场景 025")
+  assert(scnIds.includes("029"), "应进入共用结局场景 029")
+  assert(!scnIds.includes("024"), "不应串线到真结局场景 024")
+})
+
+await test("真实全剧本通关：回归日常线不串线", async () => {
+  const scripts = await loadRealScripts(Array.from({ length: 29 }, (_, i) => String(i + 1).padStart(3, "0")))
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "src/common/game.txt"), "utf-8"))
+  const table = Object.assign({}, PASS_TABLE, { 13: 0 })  // 最终选「要对小涟放手」
+  const { rt, scnIds, toasts } = await playThrough(cfg, scripts, table)
+  assert(rt.ended, "游戏应正常结束")
+  eq(toasts.some((m) => m.indexOf("未找到标签") !== -1), false, "全程无「未找到标签」")
+  assert(scnIds.includes("027"), "应进入回归日常线场景 027")
+  assert(scnIds.includes("029"), "应进入共用结局场景 029")
+  assert(!scnIds.includes("024"), "不应串线到真结局场景 024")
 })
 
 // =====================================================================

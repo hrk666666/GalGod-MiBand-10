@@ -64,6 +64,7 @@ def main():
 
     # ---- 3. 标签表 ----
     labels = {}
+    scene_labels = {}   # sid -> set(标签名)：跨块引用 scnId@label 按场景校验
     for i, (sid, n) in enumerate(stream):
         if not isinstance(n, list) or not n:
             errors.append("节点结构错误 @%d: %r" % (i, n))
@@ -72,7 +73,16 @@ def main():
             if n[1] in labels:
                 warns.append("重复标签: %s" % n[1])
             labels[n[1]] = i
+            scene_labels.setdefault(sid, set()).add(n[1])
     print("  标签数: %d" % len(labels))
+
+    def target_ok(tg, sid):
+        """跳转目标可解析：同场景纯标签查全局表；跨块 scnId@label 按目标场景校验。"""
+        tg = str(tg)
+        if "@" in tg:
+            s, lab = tg.split("@", 1)
+            return s in scene_labels and lab in scene_labels[s]
+        return tg in labels
 
     # ---- 4. 逐节点结构 & 跳转 & 资源 ----
     res_used = {"bg": set(), "ch": set(), "ev": set(), "sd": set()}
@@ -138,7 +148,7 @@ def main():
                     if len(it) < 2:
                         errors.append("选项项缺字段 @%s:%d" % (sid, i))
                         continue
-                    if it[1] not in labels:
+                    if not target_ok(it[1], sid):
                         errors.append("选项跳转目标缺失: %s @%s:%d" % (it[1], sid, i))
         elif t == SCN_TYPE["NEXT"]:
             tg = n[1] if len(n) > 1 else None
@@ -147,7 +157,7 @@ def main():
             elif str(tg).startswith("*gameend_"):
                 stat["end"] += 1
                 endings.add(str(tg)[len("*gameend_"):])
-            elif not str(tg).startswith("*") and tg not in labels:
+            elif not str(tg).startswith("*") and not target_ok(tg, sid):
                 errors.append("跳转目标缺失: %s @%s:%d" % (tg, sid, i))
         elif t == SCN_TYPE["EV"]:
             if len(n) < 2:

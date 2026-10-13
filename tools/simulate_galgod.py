@@ -159,6 +159,8 @@ def main():
             if n[1] in label_index:
                 print("  ! 重复标签:", n[1])
             label_index[n[1]] = i
+            # 跨块引用（scnId@label，转换器按引擎语义改写）→ 同一位置
+            label_index["%s@%s" % (sid, n[1])] = i
     print("== 模拟器 ==")
     print("  指令流长度: %d" % len(stream))
     print("  标签数:     %d" % len(label_index))

@@ -28,6 +28,11 @@ convert_galgod.py — 把 GalGod 手环版剧本（索引 + 分块 JSON 对象�
 关键设计: GalGod 用「全局绝对下标」跳转，VnEngine 用「标签名」跳转。
 本转换器为每个被跳转的下标生成唯一标签 L<下标>，并在每个源节点的位置
 插入对应的 [0,"L<下标>"] 标签节点，从而把下标跳转翻译成标签跳转。
+
+跨块引用: VnEngine 按块（场景）加载，选项/NEXT 跳转只认「当前块内的标签」，
+跨块目标必须写成 scnId@label 形式（引擎 _jumpToScenarioLabel 支持）。
+本转换器在输出跳转引用时，若目标标签与引用节点不在同一输出块，
+就把引用改写成 "%03d@L<下标>"，避免运行时「未找到标签」。
 """
 
 import json
@@ -312,6 +317,16 @@ def convert(src_root, dst_root):
         kind, name = asset_map[idx]
         return name
 
+    def xref_label(gi, tgt_idx, tlabel):
+        """按引擎语义输出跳转引用：
+        目标标签与引用节点同块 → 纯标签；
+        跨块 → scnId@label（引擎 _jumpToScenarioLabel 支持按块加载并定位标签）。
+        tgt_idx 是标签实际所在位置的源全局下标（与 tlabel 一一对应）。
+        """
+        if block_of[gi] == block_of[tgt_idx]:
+            return tlabel
+        return "%03d@%s" % (block_of[tgt_idx] + 1, tlabel)
+
     for gi, n in enumerate(nodes):
         bi = block_of[gi]
         out = blocks[bi]
@@ -366,12 +381,14 @@ def convert(src_root, dst_root):
                 text = o.get("x") or ""
                 tgt, _chain = resolve_chain(nodes, o["j"], targets)
                 # 目标标签：优先用链落点，但必须保证那个下标有标签
+                ref_idx = tgt if tgt in label_of else o["j"]
                 tlabel = label_of.get(tgt) or label_of.get(o["j"])
                 if tlabel is None:
                     # 该目标没被登记（理论上不会发生），补一个落点标签
                     tlabel = "L%d" % o["j"]
                     label_of[o["j"]] = tlabel
-                item = [text, tlabel, ""]
+                    ref_idx = o["j"]
+                item = [text, xref_label(gi, ref_idx, tlabel), ""]
                 c = o.get("c")
                 if isinstance(c, list) and len(c) >= 3:
                     item.append(cond_expr(c[0], c[1], c[2]))
@@ -385,7 +402,7 @@ def convert(src_root, dst_root):
             if tlabel is None:
                 tlabel = "L%d" % tgt
                 label_of[tgt] = tlabel
-            out.append([6, tlabel])
+            out.append([6, xref_label(gi, tgt, tlabel)])
             stats["jump"] += 1
 
         elif t == "cj":
@@ -396,7 +413,7 @@ def convert(src_root, dst_root):
             if tlabel is None:
                 tlabel = "L%d" % tgt
                 label_of[tgt] = tlabel
-            out.append([6, tlabel, cond_expr(n.get("v"), n.get("op", "=="), n.get("n"))])
+            out.append([6, xref_label(gi, tgt, tlabel), cond_expr(n.get("v"), n.get("op", "=="), n.get("n"))])
             stats["jump"] += 1
 
         elif t == "f":
