@@ -60,6 +60,14 @@
         <text class="card-label">自动保存</text>
         <image class="switch-img" src="/common/images/{{ settings.autoSave ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
       </div>
+      <div class="card switch-row" @click="toggleKeepScreenOn">
+        <text class="card-label">屏幕常亮</text>
+        <image class="switch-img" src="/common/images/{{ settings.keepScreenOn ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
+      <div class="card switch-row" @click="toggleLowBrightness">
+        <text class="card-label">低亮度模式</text>
+        <image class="switch-img" src="/common/images/{{ settings.lowBrightness ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
+      </div>
       <div class="card switch-row" @click="toggleVibration">
         <text class="card-label">振动反馈</text>
         <image class="switch-img" src="/common/images/{{ settings.vibration ? 'Switch_ON' : 'Switch_OFF' }}.png"></image>
@@ -108,7 +116,9 @@ export default {
       autoPlayDelay: 500,
       boldText: true,
       autoSave: true,
+      keepScreenOn: false,
       darkMode: false,
+      lowBrightness: false,
       vibration: true
     }
   },
@@ -189,6 +199,16 @@ export default {
 
   toggleAutoSave() {
     this.settings.autoSave = !this.settings.autoSave
+    vibrateShort()
+  },
+
+  toggleKeepScreenOn() {
+    this.settings.keepScreenOn = !this.settings.keepScreenOn
+    vibrateShort()
+  },
+
+  toggleLowBrightness() {
+    this.settings.lowBrightness = !this.settings.lowBrightness
     vibrateShort()
   },
 

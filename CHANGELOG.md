@@ -1,5 +1,13 @@
 # 更新日志
 
+## 1.1.4（2026-10-14）
+
+### 回退
+- **恢复 system.brightness 相关功能**（回退 1.1.2 的移除）：`game.ux` 恢复 `@system.brightness` 引用与 `captureOriginalBrightness` / `restoreBrightness` / `applyKeepScreenOn` 三个方法及生命周期调用；`settings.ux` 恢复「屏幕常亮」「低亮度模式」两个开关；`manifest.json` 恢复 `system.brightness` 权限声明；`docs/应用介绍.html` 恢复描述。1.1.2 的移除被判定为错误修复。
+
+### 其他
+- 版本号升至 1.1.4（manifest versionCode 6）。继承 1.1.3 的跨块跳转修复（scnId@label）。
+
 ## 1.1.3（2026-10-13）
 
 ### 修复
